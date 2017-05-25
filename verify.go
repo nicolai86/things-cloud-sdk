@@ -28,7 +28,7 @@ func (c *Client) Verify() (*VerifyResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		return nil, err
 	}

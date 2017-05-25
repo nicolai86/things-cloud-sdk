@@ -41,8 +41,7 @@ func New(endpoint, email, password string) *Client {
 // ThingsUserAgent is the http user-agent header set by things for mac Version 3.0.1 (30001501)
 const ThingsUserAgent = "ThingsMac/30001501mas"
 
-// Do executes a http request to the things cloud, adding authorization
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
+func (c *Client) do(req *http.Request) (*http.Response, error) {
 	uri := fmt.Sprintf("%s%s", c.Endpoint, req.URL)
 	u, err := url.Parse(uri)
 	if err != nil {

@@ -20,6 +20,10 @@ func main() {
 		log.Printf("Failed to lookup histories: %q\n", err.Error())
 	} else {
 		log.Printf("Histories: %d\n", len(hs))
+
+		if len(hs) > 0 {
+			log.Printf("Syncing History 0… %s\n", hs[0].Sync())
+		}
 	}
 
 	if h, err := c.CreateHistory(); err != nil {

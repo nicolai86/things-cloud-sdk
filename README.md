@@ -14,6 +14,7 @@ can enhance your Things experience on iOS and Mac.
   - [x] List Histories
   - [x] Create History 
   - [x] Delete History
+  - [x] Sync History
   - [ ] Item Management
     - [ ] Tasks
       - [ ] Create

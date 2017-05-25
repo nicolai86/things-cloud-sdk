@@ -65,3 +65,21 @@ func TestHistory_Delete(t *testing.T) {
 		}
 	})
 }
+
+func TestHistory_Sync(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		t.Parallel()
+		server := fakeServer(fakeResponse{200, "history-success.json"})
+		defer server.Close()
+
+		c := New(fmt.Sprintf("http://%s", server.Listener.Addr().String()), "martin@example.com", "")
+		h := History{Client: c, key: "33333abb-bfe4-4b03-a5c9-106d42220c72"}
+		err := h.Sync()
+		if err != nil {
+			t.Fatalf("Expected request to succeed, but didn't: %q", err.Error())
+		}
+		if h.counter != 27 {
+			t.Errorf("Expected counter of %d, but got %d", 27, h.counter)
+		}
+	})
+}

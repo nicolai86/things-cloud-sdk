@@ -11,7 +11,41 @@ import (
 type History struct {
 	Client *Client
 
-	key string
+	key     string
+	counter int
+}
+
+type historyResponse struct {
+	LatestSchemaVersion    int  `json:"latest-schema-version"`
+	LatestTotalContentSize int  `json:"latest-total-content-size"`
+	IsEmpty                bool `json:"is-empty"`
+	LatestServerIndex      int  `json:"latest-server-index"`
+}
+
+// Sync ensures the history object is able to write to things
+func (h *History) Sync() error {
+	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s", h.key), nil)
+	if err != nil {
+		return err
+	}
+	resp, err := h.Client.do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("http response code: %s", resp.Status)
+	}
+
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var v historyResponse
+	json.Unmarshal(bs, &v)
+	h.counter = v.LatestServerIndex
+	return nil
 }
 
 // Histories requests all known history keys
@@ -32,11 +66,11 @@ func (c *Client) Histories() ([]*History, error) {
 			return nil, fmt.Errorf("http response code: %s", resp.Status)
 		}
 	}
-	var keys []string
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
+	var keys []string
 	json.Unmarshal(bs, &keys)
 
 	var histories = make([]*History, len(keys))
@@ -71,11 +105,11 @@ func (c *Client) CreateHistory() (*History, error) {
 			return nil, fmt.Errorf("http response code: %s", resp.Status)
 		}
 	}
-	var v createHistoryResponse
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
+	var v createHistoryResponse
 	json.Unmarshal(bs, &v)
 	return &History{
 		Client: c,

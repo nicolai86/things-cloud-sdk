@@ -23,7 +23,7 @@ func TestClient_Verify(t *testing.T) {
 
 	t.Run("Error", func(t *testing.T) {
 		t.Parallel()
-		server := fakeServer(fakeResponse{401, "verify-error.json"})
+		server := fakeServer(fakeResponse{401, "error.json"})
 		defer server.Close()
 
 		c := New(fmt.Sprintf("http://%s", server.Listener.Addr().String()), "unknown@example.com", "")

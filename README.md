@@ -14,27 +14,27 @@ can enhance your Things experience on iOS and Mac.
   - [x] List Histories
   - [x] Create History 
   - [x] Delete History
-- [ ] Item Management
-  - [ ] Tasks
-    - [ ] Create
-    - [ ] Read
-    - [ ] Update
-    - [ ] Delete
-    - [ ] Status (Created, Completed, Cancelled)
-  - [ ] Checklists
-    - [ ] Create
-    - [ ] Read
-    - [ ] Update
-    - [ ] Delete
-    - [ ] Status (Todo, Done)
-  - [ ] Projects
-    - [ ] Create
-    - [ ] Read
-    - [ ] Update
-    - [ ] Delete
-  - [ ] Relationships
-    - [ ] Tasks -> Checklists
-    - [ ] Projects -> Tasks
+  - [ ] Item Management
+    - [ ] Tasks
+      - [ ] Create
+      - [ ] Read
+      - [ ] Update
+      - [ ] Delete
+      - [ ] Status (Created, Completed, Cancelled)
+    - [ ] Checklists
+      - [ ] Create
+      - [ ] Read
+      - [ ] Update
+      - [ ] Delete
+      - [ ] Status (Todo, Done)
+    - [ ] Projects
+      - [ ] Create
+      - [ ] Read
+      - [ ] Update
+      - [ ] Delete
+    - [ ] Relationships
+      - [ ] Tasks -> Checklists
+      - [ ] Projects -> Tasks
 
 ## Note
 

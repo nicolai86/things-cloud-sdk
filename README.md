@@ -10,10 +10,10 @@ can enhance your Things experience on iOS and Mac.
 ## TODO
 
 - [x] Verify Credentials
-- [ ] History management
-  - [ ] List Histories
-  - [ ] Create History 
-  - [ ] Delete History
+- [x] History management
+  - [x] List Histories
+  - [x] Create History 
+  - [x] Delete History
 - [ ] Item Management
   - [ ] Tasks
     - [ ] Create

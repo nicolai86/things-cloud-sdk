@@ -78,8 +78,8 @@ func TestHistory_Sync(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Expected request to succeed, but didn't: %q", err.Error())
 		}
-		if h.counter != 27 {
-			t.Errorf("Expected counter of %d, but got %d", 27, h.counter)
+		if h.LatestServerIndex != 27 {
+			t.Errorf("Expected LatestServerIndex of %d, but got %d", 27, h.LatestServerIndex)
 		}
 	})
 }

@@ -16,26 +16,8 @@ can enhance your Things experience on iOS and Mac.
   - [x] Delete History
   - [x] Sync History
   - [ ] Item Management
-    - [ ] Tasks
-      - [ ] Create
-      - [ ] Read
-      - [ ] Update
-      - [ ] Delete
-      - [ ] Status (Created, Completed, Cancelled)
-    - [ ] Checklists
-      - [ ] Create
-      - [ ] Read
-      - [ ] Update
-      - [ ] Delete
-      - [ ] Status (Todo, Done)
-    - [ ] Projects
-      - [ ] Create
-      - [ ] Read
-      - [ ] Update
-      - [ ] Delete
-    - [ ] Relationships
-      - [ ] Tasks -> Checklists
-      - [ ] Projects -> Tasks
+    - [x] read items 
+    - [ ] write items
 
 ## Note
 

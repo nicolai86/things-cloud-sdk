@@ -9,10 +9,10 @@ import (
 
 // History represents a synchronization stream. It's identified with a uuid v4
 type History struct {
-	Client *Client
+	Client            *Client
+	LatestServerIndex int
 
-	key     string
-	counter int
+	key string
 }
 
 type historyResponse struct {
@@ -44,7 +44,7 @@ func (h *History) Sync() error {
 	}
 	var v historyResponse
 	json.Unmarshal(bs, &v)
-	h.counter = v.LatestServerIndex
+	h.LatestServerIndex = v.LatestServerIndex
 	return nil
 }
 

@@ -100,6 +100,16 @@ Tags:           %d
 				printTask(task, state, "|")
 			}
 
+			fmt.Printf("Today\n")
+			for _, task := range state.Tasks {
+				if task.Schedule != thingscloud.TaskScheduleToday {
+					continue
+				}
+				if task.Status != thingscloud.TaskStatusPending {
+					continue
+				}
+				printTask(task, state, "--")
+			}
 		}
 	}
 

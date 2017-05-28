@@ -43,6 +43,7 @@ type Task struct {
 	AreaIDs          []string
 	ParentTaskIDs    []string
 	InTrash          bool
+	Schedule         TaskSchedule
 }
 
 // Subtasks returns tasks grouped together with under a root task
@@ -137,27 +138,30 @@ func (s *State) TasksByArea(area *Area) []*Task {
 type taskItem struct {
 	Item
 	P struct {
-		Index             *int        `json:"ix,omitempty"`
-		CreationDate      *Timestamp  `json:"cd,omitempty"`
-		ModificationDate  *Timestamp  `json:"md,omitempty"`
-		ScheduledDate     *Timestamp  `json:"sr,omitempty"`
-		CompletionDate    *Timestamp  `json:"sp,omitempty"`
-		DeadlineDate      *Timestamp  `json:"dd,omitempty"`
-		Status            *TaskStatus `json:"ss,omitempty"`
-		TaskParent        *Boolean    `json:"tp,omitempty"`
-		Title             *string     `json:"tt,omitempty"`
-		Note              *string     `json:"nt,omitempty"`
-		AreaIDs           *[]string   `json:"ar,omitempty"`
-		ParentTaskIDs     *[]string   `json:"pr,omitempty"`
-		TagIDs            []string    `json:"tg,omitempty"`
-		InTrash           *bool       `json:"tr,omitempty"`
+		Index             *int          `json:"ix,omitempty"`
+		CreationDate      *Timestamp    `json:"cd,omitempty"`
+		ModificationDate  *Timestamp    `json:"md,omitempty"`
+		ScheduledDate     *Timestamp    `json:"sr,omitempty"`
+		CompletionDate    *Timestamp    `json:"sp,omitempty"`
+		DeadlineDate      *Timestamp    `json:"dd,omitempty"`
+		Status            *TaskStatus   `json:"ss,omitempty"`
+		TaskParent        *Boolean      `json:"tp,omitempty"`
+		Title             *string       `json:"tt,omitempty"`
+		Note              *string       `json:"nt,omitempty"`
+		AreaIDs           *[]string     `json:"ar,omitempty"`
+		ParentTaskIDs     *[]string     `json:"pr,omitempty"`
+		TagIDs            []string      `json:"tg,omitempty"`
+		InTrash           *bool         `json:"tr,omitempty"`
+		Schedule          *TaskSchedule `json:"st,omitempty"`
 	} `json:"p"`
 }
 
 func (s *State) updateTask(item taskItem) *Task {
 	t, ok := s.Tasks[item.ID]
 	if !ok {
-		t = &Task{}
+		t = &Task{
+			Schedule: TaskScheduleNormal,
+		}
 	}
 	t.ID = item.ID
 
@@ -172,6 +176,9 @@ func (s *State) updateTask(item taskItem) *Task {
 	}
 	if item.P.InTrash != nil {
 		t.InTrash = *item.P.InTrash
+	}
+	if item.P.Schedule != nil {
+		t.Schedule = *item.P.Schedule
 	}
 	if item.P.ScheduledDate != nil {
 		t.ScheduledDate = item.P.ScheduledDate.Time()

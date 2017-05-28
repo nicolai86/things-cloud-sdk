@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//go:generate stringer -type ItemAction,TaskStatus
+//go:generate stringer -type ItemAction,TaskStatus,TaskSchedule
 
 // ItemAction describes possible actions on Items
 type ItemAction int
@@ -17,6 +17,14 @@ const (
 	ItemActionModified ItemAction = 1
 	// ItemActionDeleted is used as a tombstone for an Item
 	ItemActionDeleted ItemAction = 2
+)
+
+type TaskSchedule int
+
+const (
+	TaskScheduleToday   TaskSchedule = 0
+	TaskScheduleNormal  TaskSchedule = 1
+	TaskScheduleSomeday TaskSchedule = 2
 )
 
 // TaskStatus describes if a thing is completed or not

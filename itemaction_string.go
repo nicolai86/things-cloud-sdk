@@ -37,9 +37,9 @@ func (i TaskStatus) String() string {
 	}
 }
 
-const _TaskSchedule_name = "TaskScheduleTodayTaskScheduleNormalTaskScheduleSomeday"
+const _TaskSchedule_name = "TaskScheduleTodayTaskScheduleAnytimeTaskScheduleSomeday"
 
-var _TaskSchedule_index = [...]uint8{0, 17, 35, 54}
+var _TaskSchedule_index = [...]uint8{0, 17, 36, 55}
 
 func (i TaskSchedule) String() string {
 	if i < 0 || i >= TaskSchedule(len(_TaskSchedule_index)-1) {

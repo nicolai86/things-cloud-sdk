@@ -160,7 +160,7 @@ func (s *State) updateTask(item taskItem) *Task {
 	t, ok := s.Tasks[item.ID]
 	if !ok {
 		t = &Task{
-			Schedule: TaskScheduleNormal,
+			Schedule: TaskScheduleAnytime,
 		}
 	}
 	t.ID = item.ID

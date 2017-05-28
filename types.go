@@ -23,7 +23,7 @@ type TaskSchedule int
 
 const (
 	TaskScheduleToday   TaskSchedule = 0
-	TaskScheduleNormal  TaskSchedule = 1
+	TaskScheduleAnytime TaskSchedule = 1
 	TaskScheduleSomeday TaskSchedule = 2
 )
 

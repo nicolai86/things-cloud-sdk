@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+// State is created by applying all history items in order.
+// Note that the hierarchy within the state (e.g. area > tasks > tasks > check list items)
+// is modelled with pointers between the different maps, so concurrent modification
+// is not safe.
 type State struct {
 	Areas          map[string]Area
 	Tasks          map[string]Task
@@ -13,6 +17,7 @@ type State struct {
 	CheckListItems map[string]CheckListItem
 }
 
+// NewState creates a new, empty state
 func NewState() *State {
 	return &State{
 		Areas:          map[string]Area{},
@@ -22,24 +27,7 @@ func NewState() *State {
 	}
 }
 
-// Area describes an Area inside things. An Area is a container for tasks
-type Area struct {
-	ID    string
-	Title string
-	Tags  []Tag
-	Tasks []Task
-}
-
-// areaItem describes an event on an area
-type areaItem struct {
-	Item
-	P struct {
-		IX     *int     `json:"ix"`
-		Title  *string  `json:"tt"`
-		TagIDs []string `json:"tg"`
-	} `json:"p"`
-}
-
+// Task describes a Task inside things.
 type Task struct {
 	ID               string
 	CreationDate     time.Time
@@ -50,9 +38,10 @@ type Task struct {
 	DueDate          *time.Time
 	CompletionDate   *time.Time
 
-	SubTasks []Task
+	SubTasks []*Task
 }
 
+// taskItem describes an event on a task
 type taskItem struct {
 	Item
 	P struct {
@@ -71,6 +60,42 @@ type taskItem struct {
 	} `json:"p"`
 }
 
+func (s *State) updateTask(item taskItem) Task {
+	t, ok := s.Tasks[item.ID]
+	if !ok {
+		t = Task{ID: item.ID}
+	}
+
+	if item.P.Title != nil {
+		t.Title = *item.P.Title
+	}
+	if item.P.Status != nil {
+		t.Status = *item.P.Status
+	}
+	if item.P.DueDate != nil {
+		t.DueDate = item.P.DueDate.Time()
+	}
+	if item.P.CompletionDate != nil {
+		t.CompletionDate = item.P.CompletionDate.Time()
+	}
+	if item.P.CreationDate != nil {
+		cd := item.P.CreationDate.Time()
+		t.CreationDate = *cd
+	}
+	if item.P.ModificationDate != nil {
+		t.ModificationDate = item.P.ModificationDate.Time()
+	}
+	if item.P.Note != nil {
+		t.Note = *item.P.Note
+	}
+	if item.P.Title != nil {
+		t.Title = *item.P.Title
+	}
+
+	return t
+}
+
+// CheckListItem describes a check list item
 type CheckListItem struct {
 	ID               string
 	CreationDate     time.Time
@@ -80,6 +105,7 @@ type CheckListItem struct {
 	CompletionDate   *time.Time
 }
 
+// checkListItem describes an event on a check list item
 type checkListItem struct {
 	Item
 	P struct {
@@ -91,6 +117,60 @@ type checkListItem struct {
 		CompletionDate   *Timestamp  `json:"sp,omitempty"`
 		TaskIDs          []string    `json:"ts"`
 	} `json:"p"`
+}
+
+func (s *State) updateCheckListItem(item checkListItem) CheckListItem {
+	c, ok := s.CheckListItems[item.ID]
+	if !ok {
+		c = CheckListItem{ID: item.ID}
+	}
+
+	if item.P.CreationDate != nil {
+		t := item.P.CreationDate.Time()
+		c.CreationDate = *t
+	}
+	if item.P.ModificationDate != nil {
+		c.ModificationDate = item.P.ModificationDate.Time()
+	}
+	if item.P.Title != nil {
+		c.Title = *item.P.Title
+	}
+	if item.P.Status != nil {
+		c.Status = *item.P.Status
+	}
+
+	return c
+}
+
+// Area describes an Area inside things. An Area is a container for tasks
+type Area struct {
+	ID    string
+	Title string
+	Tags  []*Tag
+	Tasks []*Task
+}
+
+// areaItem describes an event on an area
+type areaItem struct {
+	Item
+	P struct {
+		IX     *int     `json:"ix"`
+		Title  *string  `json:"tt"`
+		TagIDs []string `json:"tg"`
+	} `json:"p"`
+}
+
+func (s *State) updateArea(item areaItem) Area {
+	a, ok := s.Areas[item.ID]
+	if !ok {
+		a = Area{ID: item.ID}
+	}
+
+	if item.P.Title != nil {
+		a.Title = *item.P.Title
+	}
+
+	return a
 }
 
 // Tag describes the aggregated state of an Tag
@@ -111,8 +191,21 @@ type tagItem struct {
 	} `json:"p"`
 }
 
+func (s *State) updateTag(item tagItem) Tag {
+	t, ok := s.Tags[item.ID]
+	if !ok {
+		t = Tag{ID: item.ID}
+	}
+
+	if item.P.Title != nil {
+		t.Title = *item.P.Title
+	}
+
+	return t
+}
+
 // Update applies all items to update the aggregated state
-func (s State) Update(items ...Item) error {
+func (s *State) Update(items ...Item) error {
 	for _, rawItem := range items {
 		switch rawItem.Kind {
 		case ItemKindTask:
@@ -123,15 +216,9 @@ func (s State) Update(items ...Item) error {
 
 			switch item.Action {
 			case ItemActionCreated:
-				s.Tasks[item.ID] = Task{
-					Title: *item.P.Title,
-				}
+				fallthrough
 			case ItemActionModified:
-				if item.P.Title != nil {
-					t := s.Tasks[item.ID]
-					t.Title = *item.P.Title
-					s.Tasks[item.ID] = t
-				}
+				s.Tasks[item.ID] = s.updateTask(item)
 			case ItemActionDeleted:
 				delete(s.Tasks, item.ID)
 			default:
@@ -146,15 +233,9 @@ func (s State) Update(items ...Item) error {
 
 			switch item.Action {
 			case ItemActionCreated:
-				s.CheckListItems[item.ID] = CheckListItem{
-					Title: *item.P.Title,
-				}
+				fallthrough
 			case ItemActionModified:
-				if item.P.Title != nil {
-					cli := s.CheckListItems[item.ID]
-					cli.Title = *item.P.Title
-					s.CheckListItems[item.ID] = cli
-				}
+				s.CheckListItems[item.ID] = s.updateCheckListItem(item)
 			case ItemActionDeleted:
 				delete(s.CheckListItems, item.ID)
 			default:
@@ -169,15 +250,10 @@ func (s State) Update(items ...Item) error {
 
 			switch item.Action {
 			case ItemActionCreated:
-				s.Areas[item.ID] = Area{
-					Title: *item.P.Title,
-				}
+				fallthrough
 			case ItemActionModified:
-				if item.P.Title != nil {
-					area := s.Areas[item.ID]
-					area.Title = *item.P.Title
-					s.Areas[item.ID] = area
-				}
+				s.Areas[item.ID] = s.updateArea(item)
+
 			case ItemActionDeleted:
 				delete(s.Areas, item.ID)
 			default:
@@ -192,15 +268,9 @@ func (s State) Update(items ...Item) error {
 
 			switch item.Action {
 			case ItemActionCreated:
-				s.Tags[item.ID] = Tag{
-					Title: *item.P.Title,
-				}
+				fallthrough
 			case ItemActionModified:
-				if item.P.Title != nil {
-					tag := s.Tags[item.ID]
-					tag.Title = *item.P.Title
-					s.Tags[tag.ID] = tag
-				}
+				s.Tags[item.ID] = s.updateTag(item)
 			case ItemActionDeleted:
 				delete(s.Tags, item.ID)
 			default:
@@ -208,38 +278,8 @@ func (s State) Update(items ...Item) error {
 			}
 
 		default:
-			fmt.Printf("%q is not implemented yet", rawItem.Kind)
+			fmt.Printf("%q is not implemented yet\n", rawItem.Kind)
 		}
 	}
 	return nil
 }
-
-// merge what looks like an event sourcing approach
-// func mergeItems(changes ...Item) (Item, bool) {
-//   var base = changes[0]
-//   var last = changes[len(changes)-1]
-//   for _, change := range changes[1:] {
-//     if change.P.Status != nil {
-//       base.P.Status = change.P.Status
-//     }
-//     if change.P.DueDate != nil {
-//       base.P.DueDate = change.P.DueDate
-//     }
-//     if change.P.CompletionDate != nil {
-//       base.P.CompletionDate = change.P.CompletionDate
-//     }
-//     if change.P.ModificationDate != nil {
-//       base.P.ModificationDate = change.P.ModificationDate
-//     }
-//     if change.P.Note != nil {
-//       base.P.Note = change.P.Note
-//     }
-//     if change.P.Title != nil {
-//       base.P.Title = change.P.Title
-//     }
-//     if change.P.TaskParent != nil {
-//       base.P.TaskParent = change.P.TaskParent
-//     }
-//   }
-//   return base, last.Action == ActionDeleted
-// }

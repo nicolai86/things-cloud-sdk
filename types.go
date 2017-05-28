@@ -62,6 +62,11 @@ func (t *Timestamp) Format(layout string) string {
 	return time.Time(*t).Format(layout)
 }
 
+func (t *Timestamp) Time() *time.Time {
+	tt := time.Time(*t)
+	return &tt
+}
+
 type Boolean bool
 
 func (b *Boolean) UnmarshalJSON(bs []byte) error {

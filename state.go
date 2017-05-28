@@ -36,8 +36,9 @@ type Task struct {
 	Status           TaskStatus
 	Title            string
 	Note             string
-	DueDate          *time.Time
+	ScheduledDate    *time.Time
 	CompletionDate   *time.Time
+	DeadlineDate     *time.Time
 	Index            int
 	AreaIDs          []string
 	ParentTaskIDs    []string
@@ -136,19 +137,20 @@ func (s *State) TasksByArea(area *Area) []*Task {
 type taskItem struct {
 	Item
 	P struct {
-		Index            *int        `json:"ix,omitempty"`
-		CreationDate     *Timestamp  `json:"cd,omitempty"`
-		ModificationDate *Timestamp  `json:"md,omitempty"`
-		DueDate          *Timestamp  `json:"sr,omitempty"`
-		CompletionDate   *Timestamp  `json:"sp,omitempty"`
-		Status           *TaskStatus `json:"ss,omitempty"`
-		TaskParent       *Boolean    `json:"tp,omitempty"`
-		Title            *string     `json:"tt,omitempty"`
-		Note             *string     `json:"nt,omitempty"`
-		AreaIDs          *[]string   `json:"ar,omitempty"`
-		ParentTaskIDs    *[]string   `json:"pr,omitempty"`
-		TagIDs           []string    `json:"tg,omitempty"`
-		InTrash          *bool       `json:"tr,omitempty"`
+		Index             *int        `json:"ix,omitempty"`
+		CreationDate      *Timestamp  `json:"cd,omitempty"`
+		ModificationDate  *Timestamp  `json:"md,omitempty"`
+		ScheduledDate     *Timestamp  `json:"sr,omitempty"`
+		CompletionDate    *Timestamp  `json:"sp,omitempty"`
+		DeadlineDate      *Timestamp  `json:"dd,omitempty"`
+		Status            *TaskStatus `json:"ss,omitempty"`
+		TaskParent        *Boolean    `json:"tp,omitempty"`
+		Title             *string     `json:"tt,omitempty"`
+		Note              *string     `json:"nt,omitempty"`
+		AreaIDs           *[]string   `json:"ar,omitempty"`
+		ParentTaskIDs     *[]string   `json:"pr,omitempty"`
+		TagIDs            []string    `json:"tg,omitempty"`
+		InTrash           *bool       `json:"tr,omitempty"`
 	} `json:"p"`
 }
 
@@ -171,11 +173,14 @@ func (s *State) updateTask(item taskItem) *Task {
 	if item.P.InTrash != nil {
 		t.InTrash = *item.P.InTrash
 	}
-	if item.P.DueDate != nil {
-		t.DueDate = item.P.DueDate.Time()
+	if item.P.ScheduledDate != nil {
+		t.ScheduledDate = item.P.ScheduledDate.Time()
 	}
 	if item.P.CompletionDate != nil {
 		t.CompletionDate = item.P.CompletionDate.Time()
+	}
+	if item.P.DeadlineDate != nil {
+		t.DeadlineDate = item.P.DeadlineDate.Time()
 	}
 	if item.P.CreationDate != nil {
 		cd := item.P.CreationDate.Time()

@@ -4,9 +4,9 @@ package thingscloud
 
 import "fmt"
 
-const _ItemAction_name = "ActionCreatedActionModifiedActionDeleted"
+const _ItemAction_name = "ItemActionCreatedItemActionModifiedItemActionDeleted"
 
-var _ItemAction_index = [...]uint8{0, 13, 27, 40}
+var _ItemAction_index = [...]uint8{0, 17, 35, 52}
 
 func (i ItemAction) String() string {
 	if i < 0 || i >= ItemAction(len(_ItemAction_index)-1) {

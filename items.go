@@ -6,59 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 )
 
-//go:generate stringer -type ItemAction,TaskStatus
-
-type Timestamp time.Time
-
-func (t *Timestamp) UnmarshalJSON(bs []byte) error {
-	var d float64
-	if err := json.Unmarshal(bs, &d); err != nil {
-		return err
-	}
-	*t = Timestamp(time.Unix(int64(d), 0))
-	return nil
-}
-
-func (t *Timestamp) Format(layout string) string {
-	return time.Time(*t).Format(layout)
-}
-
-type ItemAction int
-
-const (
-	// ActionCreated is used to indicate a new Item was created
-	ActionCreated ItemAction = iota
-	// ActionModified is used to indicate an existing Item was modified
-	ActionModified ItemAction = 1
-	// ActionDeleted is used as a tombstone for an Item
-	ActionDeleted ItemAction = 2
-)
-
-type TaskStatus int
-
-const (
-	// TaskStatusPending indicates a new task
-	TaskStatusPending TaskStatus = iota
-	// TaskStatusCompleted indicates a completed task
-	TaskStatusCompleted TaskStatus = 3
-	// TaskStatusCanceled indicates a canceled task
-	TaskStatusCanceled TaskStatus = 2
-)
-
-type ItemKind string
-
-var (
-	ItemKindChecklist ItemKind = "ChecklistItem"
-	ItemKindTask      ItemKind = "Task3"
-	ItemKindArea      ItemKind = "Area2"
-	ItemKindSettings  ItemKind = "Settings3"
-	ItemKindTag       ItemKind = "Tag3"
-)
-
+// Item is an event in thingscloud. Every action inside things generates an Item.
+// Common items are the creation of a task, area or checklist, as well as modifying attributes
+// or marking things as done.
 type Item struct {
+	ID     string          `json:"-"`
 	P      json.RawMessage `json:"p"`
 	Kind   ItemKind        `json:"e"`
 	Action ItemAction      `json:"t"`
@@ -77,7 +31,7 @@ type ItemsOptions struct {
 	StartIndex int
 }
 
-func (h *History) Items(opts ItemsOptions) ([]map[string]Item, error) {
+func (h *History) Items(opts ItemsOptions) ([]Item, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s/items", h.key), nil)
 
 	values := req.URL.Query()
@@ -105,5 +59,12 @@ func (h *History) Items(opts ItemsOptions) ([]map[string]Item, error) {
 	if err := json.Unmarshal(bs, &v); err != nil {
 		return nil, err
 	}
-	return v.Items, nil
+	var items = []Item{}
+	for _, m := range v.Items {
+		for id, item := range m {
+			item.ID = id
+			items = append(items, item)
+		}
+	}
+	return items, nil
 }

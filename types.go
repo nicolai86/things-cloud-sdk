@@ -69,7 +69,7 @@ func (t *Timestamp) UnmarshalJSON(bs []byte) error {
 	if err := json.Unmarshal(bs, &d); err != nil {
 		return err
 	}
-	*t = Timestamp(time.Unix(int64(d), 0))
+	*t = Timestamp(time.Unix(int64(d), 0).UTC())
 	return nil
 }
 

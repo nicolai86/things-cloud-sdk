@@ -15,7 +15,7 @@ type State struct {
 	Areas          map[string]*Area
 	Tasks          map[string]*Task
 	Tags           map[string]*Tag
-	CheckListItems map[string]*CheckListItem
+	CheckListItems map[string]*CheckList
 }
 
 // NewState creates a new, empty state
@@ -23,7 +23,7 @@ func NewState() *State {
 	return &State{
 		Areas:          map[string]*Area{},
 		Tags:           map[string]*Tag{},
-		CheckListItems: map[string]*CheckListItem{},
+		CheckListItems: map[string]*CheckList{},
 		Tasks:          map[string]*Task{},
 	}
 }
@@ -44,6 +44,7 @@ type Task struct {
 	ParentTaskIDs    []string
 	InTrash          bool
 	Schedule         TaskSchedule
+	IsProject        bool
 }
 
 // Subtasks returns tasks grouped together with under a root task
@@ -134,39 +135,64 @@ func (s *State) TasksByArea(area *Area) []*Task {
 	return tasks
 }
 
-// taskItem describes an event on a task
-type taskItem struct {
-	Item
-	P struct {
-		Index             *int          `json:"ix,omitempty"`
-		CreationDate      *Timestamp    `json:"cd,omitempty"`
-		ModificationDate  *Timestamp    `json:"md,omitempty"`
-		ScheduledDate     *Timestamp    `json:"sr,omitempty"`
-		CompletionDate    *Timestamp    `json:"sp,omitempty"`
-		DeadlineDate      *Timestamp    `json:"dd,omitempty"`
-		Status            *TaskStatus   `json:"ss,omitempty"`
-		TaskParent        *Boolean      `json:"tp,omitempty"`
-		Title             *string       `json:"tt,omitempty"`
-		Note              *string       `json:"nt,omitempty"`
-		AreaIDs           *[]string     `json:"ar,omitempty"`
-		ParentTaskIDs     *[]string     `json:"pr,omitempty"`
-		TagIDs            []string      `json:"tg,omitempty"`
-		InTrash           *bool         `json:"tr,omitempty"`
-		Schedule          *TaskSchedule `json:"st,omitempty"`
-	} `json:"p"`
+type TaskItemPayload struct {
+	Index             *int          `json:"ix,omitempty"`
+	CreationDate      *Timestamp    `json:"cd,omitempty"`
+	ModificationDate  *Timestamp    `json:"md,omitempty"`
+	ScheduledDate     *Timestamp    `json:"sr,omitempty"`
+	CompletionDate    *Timestamp    `json:"sp,omitempty"`
+	DeadlineDate      *Timestamp    `json:"dd,omitempty"`
+	Status            *TaskStatus   `json:"ss,omitempty"`
+	IsProject         *Boolean      `json:"tp,omitempty"`
+	Title             *string       `json:"tt,omitempty"`
+	Note              *string       `json:"nt,omitempty"`
+	AreaIDs           *[]string     `json:"ar,omitempty"`
+	ParentTaskIDs     *[]string     `json:"pr,omitempty"`
+	TagIDs            []string      `json:"tg,omitempty"`
+	InTrash           *bool         `json:"tr,omitempty"`
+	RecurrenceTaskIDs *[]string     `json:"rt,omitempty"`
+	Schedule          *TaskSchedule `json:"st,omitempty"`
+	// "rr": {
+	//   "fu": 16,
+	//   "sr": 1495670400,
+	//   "of": [
+	//     {
+	//       "dy": 0
+	//     }
+	//   ],
+	//   "ts": -3,
+	//   "tp": 0,
+	//   "fa": 1,
+	//   "rc": 2,
+	//   "ia": 1495929600,
+	//   "rrv": 4
+	// },
 }
 
-func (s *State) updateTask(item taskItem) *Task {
-	t, ok := s.Tasks[item.ID]
+// taskItem describes an event on a task
+type TaskItem struct {
+	Item
+	P TaskItemPayload `json:"p"`
+}
+
+func (t TaskItem) ID() string {
+	return t.Item.ID
+}
+
+func (s *State) updateTask(item TaskItem) *Task {
+	t, ok := s.Tasks[item.ID()]
 	if !ok {
 		t = &Task{
 			Schedule: TaskScheduleAnytime,
 		}
 	}
-	t.ID = item.ID
+	t.ID = item.ID()
 
 	if item.P.Title != nil {
 		t.Title = *item.P.Title
+	}
+	if item.P.IsProject != nil {
+		t.IsProject = bool(*item.P.IsProject)
 	}
 	if item.P.Status != nil {
 		t.Status = *item.P.Status
@@ -215,8 +241,8 @@ func (s *State) updateTask(item taskItem) *Task {
 }
 
 // CheckListItemsByTask returns check lists associated with a particular item
-func (s *State) CheckListItemsByTask(task *Task) []*CheckListItem {
-	items := []*CheckListItem{}
+func (s *State) CheckListItemsByTask(task *Task) []*CheckList {
+	items := []*CheckList{}
 	for _, item := range s.CheckListItems {
 		if item.Status == TaskStatusCompleted {
 			continue
@@ -235,8 +261,8 @@ func (s *State) CheckListItemsByTask(task *Task) []*CheckListItem {
 	return items
 }
 
-// CheckListItem describes a check list item
-type CheckListItem struct {
+// CheckList describes a check list item
+type CheckList struct {
 	ID               string
 	CreationDate     time.Time
 	ModificationDate *time.Time
@@ -247,24 +273,26 @@ type CheckListItem struct {
 	TaskIDs          []string
 }
 
-// checkListItem describes an event on a check list item
-type checkListItem struct {
-	Item
-	P struct {
-		CreationDate     *Timestamp  `json:"cd,omitempty"`
-		ModificationDate *Timestamp  `json:"md,omitempty"`
-		Index            *int        `json:"ix"`
-		Status           *TaskStatus `json:"ss,omitempty"`
-		Title            *string     `json:"tt,omitempty"`
-		CompletionDate   *Timestamp  `json:"sp,omitempty"`
-		TaskIDs          *[]string   `json:"ts,omitempty"`
-	} `json:"p"`
+type CheckListItemPayload struct {
+	CreationDate     *Timestamp  `json:"cd,omitempty"`
+	ModificationDate *Timestamp  `json:"md,omitempty"`
+	Index            *int        `json:"ix"`
+	Status           *TaskStatus `json:"ss,omitempty"`
+	Title            *string     `json:"tt,omitempty"`
+	CompletionDate   *Timestamp  `json:"sp,omitempty"`
+	TaskIDs          *[]string   `json:"ts,omitempty"`
 }
 
-func (s *State) updateCheckListItem(item checkListItem) *CheckListItem {
+// CheckListItem describes an event on a check list item
+type CheckListItem struct {
+	Item
+	P CheckListItemPayload `json:"p"`
+}
+
+func (s *State) updateCheckListItem(item CheckListItem) *CheckList {
 	c, ok := s.CheckListItems[item.ID]
 	if !ok {
-		c = &CheckListItem{}
+		c = &CheckList{}
 	}
 	c.ID = item.ID
 
@@ -300,22 +328,28 @@ type Area struct {
 	Tasks []*Task
 }
 
-// areaItem describes an event on an area
-type areaItem struct {
-	Item
-	P struct {
-		IX     *int     `json:"ix"`
-		Title  *string  `json:"tt"`
-		TagIDs []string `json:"tg"`
-	} `json:"p"`
+type AreaItemPayload struct {
+	IX     *int     `json:"ix"`
+	Title  *string  `json:"tt"`
+	TagIDs []string `json:"tg"`
 }
 
-func (s *State) updateArea(item areaItem) *Area {
-	a, ok := s.Areas[item.ID]
+// AreaItem describes an event on an area
+type AreaItem struct {
+	Item
+	P AreaItemPayload `json:"p"`
+}
+
+func (item AreaItem) ID() string {
+	return item.Item.ID
+}
+
+func (s *State) updateArea(item AreaItem) *Area {
+	a, ok := s.Areas[item.ID()]
 	if !ok {
 		a = &Area{}
 	}
-	a.ID = item.ID
+	a.ID = item.ID()
 
 	if item.P.Title != nil {
 		a.Title = *item.P.Title
@@ -332,7 +366,7 @@ type Tag struct {
 	ShortHand    string
 }
 
-type tagItemPayload struct {
+type TagItemPayload struct {
 	IX           *int      `json:"ix"`
 	Title        *string   `json:"tt"`
 	ShortHand    *string   `json:"sh"`
@@ -340,9 +374,13 @@ type tagItemPayload struct {
 }
 
 // tagItem describes an event on a tag
-type tagItem struct {
+type TagItem struct {
 	Item
-	P tagItemPayload `json:"p"`
+	P TagItemPayload `json:"p"`
+}
+
+func (t TagItem) ID() string {
+	return t.Item.ID
 }
 
 // SubTags returns all child tags for a given root, ensuring sort order is kept intact
@@ -367,12 +405,12 @@ func (s *State) SubTags(root *Tag) []*Tag {
 	return children
 }
 
-func (s *State) updateTag(item tagItem) *Tag {
-	t, ok := s.Tags[item.ID]
+func (s *State) updateTag(item TagItem) *Tag {
+	t, ok := s.Tags[item.ID()]
 	if !ok {
 		t = &Tag{}
 	}
-	t.ID = item.ID
+	t.ID = item.ID()
 
 	if item.P.Title != nil {
 		t.Title = *item.P.Title
@@ -393,7 +431,7 @@ func (s *State) Update(items ...Item) error {
 	for _, rawItem := range items {
 		switch rawItem.Kind {
 		case ItemKindTask:
-			item := taskItem{Item: rawItem}
+			item := TaskItem{Item: rawItem}
 			if err := json.Unmarshal(rawItem.P, &item.P); err != nil {
 				return err
 			}
@@ -402,15 +440,15 @@ func (s *State) Update(items ...Item) error {
 			case ItemActionCreated:
 				fallthrough
 			case ItemActionModified:
-				s.Tasks[item.ID] = s.updateTask(item)
+				s.Tasks[item.ID()] = s.updateTask(item)
 			case ItemActionDeleted:
-				delete(s.Tasks, item.ID)
+				delete(s.Tasks, item.ID())
 			default:
 				fmt.Printf("Action %q on %q is not implemented yet", item.Action, rawItem.Kind)
 			}
 
 		case ItemKindChecklistItem:
-			item := checkListItem{Item: rawItem}
+			item := CheckListItem{Item: rawItem}
 			if err := json.Unmarshal(rawItem.P, &item.P); err != nil {
 				return err
 			}
@@ -427,7 +465,7 @@ func (s *State) Update(items ...Item) error {
 			}
 
 		case ItemKindArea:
-			item := areaItem{Item: rawItem}
+			item := AreaItem{Item: rawItem}
 			if err := json.Unmarshal(rawItem.P, &item.P); err != nil {
 				return err
 			}
@@ -436,16 +474,16 @@ func (s *State) Update(items ...Item) error {
 			case ItemActionCreated:
 				fallthrough
 			case ItemActionModified:
-				s.Areas[item.ID] = s.updateArea(item)
+				s.Areas[item.ID()] = s.updateArea(item)
 
 			case ItemActionDeleted:
-				delete(s.Areas, item.ID)
+				delete(s.Areas, item.ID())
 			default:
 				fmt.Printf("Action %q on %q is not implemented yet", item.Action, rawItem.Kind)
 			}
 
 		case ItemKindTag:
-			item := tagItem{Item: rawItem}
+			item := TagItem{Item: rawItem}
 			if err := json.Unmarshal(rawItem.P, &item.P); err != nil {
 				return err
 			}
@@ -454,9 +492,9 @@ func (s *State) Update(items ...Item) error {
 			case ItemActionCreated:
 				fallthrough
 			case ItemActionModified:
-				s.Tags[item.ID] = s.updateTag(item)
+				s.Tags[item.ID()] = s.updateTag(item)
 			case ItemActionDeleted:
-				delete(s.Tags, item.ID)
+				delete(s.Tags, item.ID())
 			default:
 				fmt.Printf("Action %q on %q is not implemented yet", item.Action, rawItem.Kind)
 			}

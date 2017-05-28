@@ -73,6 +73,11 @@ func (t *Timestamp) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+func (t *Timestamp) MarshalJSON() ([]byte, error) {
+	var tt = time.Time(*t).Unix()
+	return json.Marshal(tt)
+}
+
 // Format returns a textual representation of the time value formatted according to layout
 func (t *Timestamp) Format(layout string) string {
 	return time.Time(*t).Format(layout)
@@ -95,4 +100,12 @@ func (b *Boolean) UnmarshalJSON(bs []byte) error {
 	}
 	*b = Boolean(d == 1)
 	return nil
+}
+
+func (b *Boolean) MarshalJSON() ([]byte, error) {
+	var d = 0
+	if *b {
+		d = 1
+	}
+	return json.Marshal(d)
 }

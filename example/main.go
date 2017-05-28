@@ -28,6 +28,10 @@ func printTask(task *thingscloud.Task, state *thingscloud.State, indent string) 
 	}
 }
 
+func stringVal(s string) *string {
+	return &s
+}
+
 func main() {
 	c := thingscloud.New(thingscloud.APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
 
@@ -44,7 +48,29 @@ func main() {
 
 		if len(hs) > 0 {
 			history := hs[0]
+			history.Sync()
+
 			state := thingscloud.NewState()
+
+			pending := thingscloud.TaskStatusPending
+			anytime := thingscloud.TaskScheduleAnytime
+			yes := thingscloud.Boolean(true)
+			if err := history.Write(thingscloud.TaskItem{
+				Item: thingscloud.Item{
+					Kind:   thingscloud.ItemKindTask,
+					Action: thingscloud.ItemActionCreated,
+					ID:     "54152210-ABFA-4F9F-81AC-7F50FBDEDC1G",
+				},
+				P: thingscloud.TaskItemPayload{
+					Title:        stringVal("test 4"),
+					Schedule:     &anytime,
+					Status:       &pending,
+					CreationDate: &thingscloud.Timestamp{},
+					IsProject:    &yes,
+				},
+			}); err != nil {
+				log.Fatalf("Write failed: %q\n", err.Error())
+			}
 
 			items, err := history.Items(thingscloud.ItemsOptions{StartIndex: 0})
 			if err != nil {

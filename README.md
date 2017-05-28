@@ -18,7 +18,7 @@ can enhance your Things experience on iOS and Mac.
   - [ ] Item Management
     - [x] read items 
     - [ ] recurring tasks
-    - [ ] write items
+    - [x] write items
   - [x] State aggregation
     - [x] InMemory
     - [ ] Persistent

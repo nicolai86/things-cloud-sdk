@@ -300,9 +300,9 @@ func TestState_updateTag(t *testing.T) {
 	s.Tags[c.ID] = c
 
 	t.Run("sets Title", func(t *testing.T) {
-		tag := s.updateTag(tagItem{
+		tag := s.updateTag(TagItem{
 			Item: Item{ID: a.ID},
-			P: tagItemPayload{
+			P: TagItemPayload{
 				Title: stringVal("a title"),
 			},
 		})
@@ -313,9 +313,9 @@ func TestState_updateTag(t *testing.T) {
 
 	t.Run("hierarchy", func(t *testing.T) {
 		t.Run("create", func(t *testing.T) {
-			a2 := s.updateTag(tagItem{
+			a2 := s.updateTag(TagItem{
 				Item: Item{ID: a.ID},
-				P: tagItemPayload{
+				P: TagItemPayload{
 					ParentTagIDs: &[]string{b.ID},
 				},
 			})
@@ -324,9 +324,9 @@ func TestState_updateTag(t *testing.T) {
 			}
 		})
 		t.Run("change", func(t *testing.T) {
-			a2 := s.updateTag(tagItem{
+			a2 := s.updateTag(TagItem{
 				Item: Item{ID: a.ID},
-				P: tagItemPayload{
+				P: TagItemPayload{
 					ParentTagIDs: &[]string{c.ID},
 				},
 			})
@@ -335,18 +335,18 @@ func TestState_updateTag(t *testing.T) {
 			}
 		})
 		t.Run("no change", func(t *testing.T) {
-			a2 := s.updateTag(tagItem{
+			a2 := s.updateTag(TagItem{
 				Item: Item{ID: a.ID},
-				P:    tagItemPayload{},
+				P:    TagItemPayload{},
 			})
 			if a2.ParentTagIDs[0] != c.ID {
 				t.Fatalf("Expected parent of %q, but got %q", c.ID, a2.ParentTagIDs)
 			}
 		})
 		t.Run("delete", func(t *testing.T) {
-			a2 := s.updateTag(tagItem{
+			a2 := s.updateTag(TagItem{
 				Item: Item{ID: a.ID},
-				P: tagItemPayload{
+				P: TagItemPayload{
 					ParentTagIDs: &[]string{},
 				},
 			})

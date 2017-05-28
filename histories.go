@@ -1,6 +1,7 @@
 package thingscloud
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,8 +10,9 @@ import (
 
 // History represents a synchronization stream. It's identified with a uuid v4
 type History struct {
-	Client            *Client
-	LatestServerIndex int
+	Client              *Client
+	LatestServerIndex   int
+	LatestSchemaVersion int
 
 	key string
 }
@@ -45,6 +47,7 @@ func (h *History) Sync() error {
 	var v historyResponse
 	json.Unmarshal(bs, &v)
 	h.LatestServerIndex = v.LatestServerIndex
+	h.LatestSchemaVersion = v.LatestSchemaVersion
 	return nil
 }
 
@@ -132,5 +135,63 @@ func (h *History) Delete() error {
 	if resp.StatusCode != http.StatusAccepted {
 		return fmt.Errorf("http response code: %s", resp.Status)
 	}
+	return nil
+}
+
+type writeRequest struct {
+	AppID            string                   `json:"app-id"`
+	AppInstanceID    string                   `json:"app-instance-id"`
+	CurrentItemIndex int                      `json:"current-item-index"`
+	Items            []map[string]interface{} `json:"items"`
+	PushPriority     int                      `json:"push-priority"`
+	Schema           int                      `json:"schema"`
+}
+
+type writeResponse struct {
+	CurrentItemIndex int `json:"current-item-index"`
+}
+
+type Identifiable interface {
+	ID() string
+}
+
+func (h *History) Write(items ...Identifiable) error {
+	var v = writeRequest{
+		AppID:            "com.culturedcode.ThingsMac",
+		AppInstanceID:    "-com.culturedcode.ThingsMac",
+		CurrentItemIndex: h.LatestServerIndex,
+		PushPriority:     10,
+		Schema:           h.LatestSchemaVersion,
+		Items:            []map[string]interface{}{},
+	}
+	for _, item := range items {
+		m := map[string]interface{}{}
+		m[item.ID()] = item
+		v.Items = append(v.Items, m)
+	}
+	bs, err := json.Marshal(v)
+	fmt.Printf("\n\n%s\n\n", string(bs))
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", fmt.Sprintf("/history/%s/items", h.key), bytes.NewReader(bs))
+	if err != nil {
+		return err
+	}
+	resp, err := h.Client.do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Write failed: %d", resp.StatusCode)
+	}
+	rs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var w writeResponse
+	json.Unmarshal(rs, &w)
+	h.LatestServerIndex = w.CurrentItemIndex
 	return nil
 }

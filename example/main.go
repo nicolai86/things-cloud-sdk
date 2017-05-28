@@ -16,6 +16,18 @@ func printTag(tag *thingscloud.Tag, state *thingscloud.State, indent string) {
 	}
 }
 
+func printTask(task *thingscloud.Task, state *thingscloud.State, indent string) {
+	fmt.Printf("%s-\t%s\n", indent, task.Title)
+	checklist := state.CheckListItemsByTask(task)
+	for _, item := range checklist {
+		fmt.Printf("%s+%s\n", indent, item.Title)
+	}
+	children := state.Subtasks(task)
+	for _, child := range children {
+		printTask(child, state, fmt.Sprintf("%s\t", indent))
+	}
+}
+
 func main() {
 	c := thingscloud.New(thingscloud.APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
 
@@ -72,6 +84,22 @@ Tags:           %d
 				}
 				printTag(tag, state, "")
 			}
+			fmt.Printf("\n\n")
+
+			fmt.Printf("Areas\n")
+			for _, area := range state.Areas {
+				fmt.Printf("-\t%s\n", area.Title)
+
+				for _, task := range state.TasksByArea(area) {
+					printTask(task, state, "|")
+				}
+			}
+
+			fmt.Printf("No Areas\n")
+			for _, task := range state.TasksWithoutArea() {
+				printTask(task, state, "|")
+			}
+
 		}
 	}
 

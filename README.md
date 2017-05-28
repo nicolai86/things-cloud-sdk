@@ -17,8 +17,11 @@ can enhance your Things experience on iOS and Mac.
   - [x] Sync History
   - [ ] Item Management
     - [x] read items 
+    - [ ] recurring tasks
     - [ ] write items
-  - [ ] State aggregation
+  - [x] State aggregation
+    - [x] InMemory
+    - [ ] Persistent
 
 ## Note
 

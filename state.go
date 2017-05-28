@@ -38,15 +38,105 @@ type Task struct {
 	Note             string
 	DueDate          *time.Time
 	CompletionDate   *time.Time
+	Index            int
+	AreaIDs          []string
+	ParentTaskIDs    []string
+	InTrash          bool
+}
 
-	SubTasks []*Task
+// Subtasks returns tasks grouped together with under a root task
+func (s *State) Subtasks(root *Task) []*Task {
+	tasks := []*Task{}
+	for _, task := range s.Tasks {
+		if task.Status == TaskStatusCompleted {
+			continue
+		}
+		if task == root {
+			continue
+		}
+		if task.InTrash {
+			continue
+		}
+		isChild := false
+		for _, taskID := range task.ParentTaskIDs {
+			isChild = isChild || taskID == root.ID
+		}
+		if isChild {
+			tasks = append(tasks, task)
+		}
+	}
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].Index < tasks[j].Index
+	})
+	return tasks
+}
+
+func hasArea(task *Task, state *State) bool {
+	if len(task.AreaIDs) != 0 {
+		return true
+	}
+	if len(task.ParentTaskIDs) == 0 {
+		return false
+	}
+	for _, taskID := range task.ParentTaskIDs {
+		if hasArea(state.Tasks[taskID], state) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *State) TasksWithoutArea() []*Task {
+	tasks := []*Task{}
+	for _, task := range s.Tasks {
+		if task.Status == TaskStatusCompleted {
+			continue
+		}
+		if len(task.ParentTaskIDs) != 0 {
+			continue
+		}
+		if task.InTrash {
+			continue
+		}
+		if !hasArea(task, s) {
+			tasks = append(tasks, task)
+		}
+	}
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].Index < tasks[j].Index
+	})
+	return tasks
+}
+
+// TasksByArea returns tasks associated with a given area
+func (s *State) TasksByArea(area *Area) []*Task {
+	tasks := []*Task{}
+	for _, task := range s.Tasks {
+		if task.Status == TaskStatusCompleted {
+			continue
+		}
+		if task.InTrash {
+			continue
+		}
+		isChild := false
+		for _, areaID := range task.AreaIDs {
+			isChild = isChild || areaID == area.ID
+		}
+		if isChild {
+			tasks = append(tasks, task)
+		}
+	}
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].Index < tasks[j].Index
+	})
+	return tasks
 }
 
 // taskItem describes an event on a task
 type taskItem struct {
 	Item
 	P struct {
-		IX               *int        `json:"ix,omitempty"`
+		Index            *int        `json:"ix,omitempty"`
 		CreationDate     *Timestamp  `json:"cd,omitempty"`
 		ModificationDate *Timestamp  `json:"md,omitempty"`
 		DueDate          *Timestamp  `json:"sr,omitempty"`
@@ -55,9 +145,10 @@ type taskItem struct {
 		TaskParent       *Boolean    `json:"tp,omitempty"`
 		Title            *string     `json:"tt,omitempty"`
 		Note             *string     `json:"nt,omitempty"`
-		AreaIDs          []string    `json:"ar,omitempty"`
-		ProjectIDs       []string    `json:"pr,omitempty"`
+		AreaIDs          *[]string   `json:"ar,omitempty"`
+		ParentTaskIDs    *[]string   `json:"pr,omitempty"`
 		TagIDs           []string    `json:"tg,omitempty"`
+		InTrash          *bool       `json:"tr,omitempty"`
 	} `json:"p"`
 }
 
@@ -74,6 +165,12 @@ func (s *State) updateTask(item taskItem) *Task {
 	if item.P.Status != nil {
 		t.Status = *item.P.Status
 	}
+	if item.P.Index != nil {
+		t.Index = *item.P.Index
+	}
+	if item.P.InTrash != nil {
+		t.InTrash = *item.P.InTrash
+	}
 	if item.P.DueDate != nil {
 		t.DueDate = item.P.DueDate.Time()
 	}
@@ -87,6 +184,14 @@ func (s *State) updateTask(item taskItem) *Task {
 	if item.P.ModificationDate != nil {
 		t.ModificationDate = item.P.ModificationDate.Time()
 	}
+	if item.P.AreaIDs != nil {
+		ids := *item.P.AreaIDs
+		t.AreaIDs = ids
+	}
+	if item.P.ParentTaskIDs != nil {
+		ids := *item.P.ParentTaskIDs
+		t.ParentTaskIDs = ids
+	}
 	if item.P.Note != nil {
 		t.Note = *item.P.Note
 	}
@@ -97,6 +202,27 @@ func (s *State) updateTask(item taskItem) *Task {
 	return t
 }
 
+// CheckListItemsByTask returns check lists associated with a particular item
+func (s *State) CheckListItemsByTask(task *Task) []*CheckListItem {
+	items := []*CheckListItem{}
+	for _, item := range s.CheckListItems {
+		if item.Status == TaskStatusCompleted {
+			continue
+		}
+		isChild := false
+		for _, taskID := range item.TaskIDs {
+			isChild = isChild || task.ID == taskID
+		}
+		if isChild {
+			items = append(items, item)
+		}
+	}
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Index < items[j].Index
+	})
+	return items
+}
+
 // CheckListItem describes a check list item
 type CheckListItem struct {
 	ID               string
@@ -104,7 +230,9 @@ type CheckListItem struct {
 	ModificationDate *time.Time
 	Status           TaskStatus
 	Title            string
+	Index            int
 	CompletionDate   *time.Time
+	TaskIDs          []string
 }
 
 // checkListItem describes an event on a check list item
@@ -113,11 +241,11 @@ type checkListItem struct {
 	P struct {
 		CreationDate     *Timestamp  `json:"cd,omitempty"`
 		ModificationDate *Timestamp  `json:"md,omitempty"`
-		IX               *int        `json:"ix"`
+		Index            *int        `json:"ix"`
 		Status           *TaskStatus `json:"ss,omitempty"`
 		Title            *string     `json:"tt,omitempty"`
 		CompletionDate   *Timestamp  `json:"sp,omitempty"`
-		TaskIDs          []string    `json:"ts"`
+		TaskIDs          *[]string   `json:"ts,omitempty"`
 	} `json:"p"`
 }
 
@@ -135,11 +263,18 @@ func (s *State) updateCheckListItem(item checkListItem) *CheckListItem {
 	if item.P.ModificationDate != nil {
 		c.ModificationDate = item.P.ModificationDate.Time()
 	}
+	if item.P.Index != nil {
+		c.Index = *item.P.Index
+	}
 	if item.P.Title != nil {
 		c.Title = *item.P.Title
 	}
 	if item.P.Status != nil {
 		c.Status = *item.P.Status
+	}
+	if item.P.TaskIDs != nil {
+		ids := *item.P.TaskIDs
+		c.TaskIDs = ids
 	}
 
 	return c
@@ -182,13 +317,13 @@ type Tag struct {
 	ID           string
 	Title        string
 	ParentTagIDs []string
-	SortOrder    string
+	ShortHand    string
 }
 
 type tagItemPayload struct {
 	IX           *int      `json:"ix"`
 	Title        *string   `json:"tt"`
-	SortOrder    *string   `json:"sh"`
+	ShortHand    *string   `json:"sh"`
 	ParentTagIDs *[]string `json:"pn"`
 }
 
@@ -215,7 +350,7 @@ func (s *State) SubTags(root *Tag) []*Tag {
 		}
 	}
 	sort.Slice(children, func(i, j int) bool {
-		return children[i].SortOrder < children[j].SortOrder
+		return children[i].ShortHand < children[j].ShortHand
 	})
 	return children
 }
@@ -230,8 +365,8 @@ func (s *State) updateTag(item tagItem) *Tag {
 	if item.P.Title != nil {
 		t.Title = *item.P.Title
 	}
-	if item.P.SortOrder != nil {
-		t.SortOrder = *item.P.SortOrder
+	if item.P.ShortHand != nil {
+		t.ShortHand = *item.P.ShortHand
 	}
 	if item.P.ParentTagIDs != nil {
 		var ids []string = *item.P.ParentTagIDs

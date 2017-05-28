@@ -19,11 +19,15 @@ const (
 	ItemActionDeleted ItemAction = 2
 )
 
+// TaskSchedule describes when a task is scheduled
 type TaskSchedule int
 
 const (
-	TaskScheduleToday   TaskSchedule = 0
+	// TaskScheduleToday indicates tasks which should be completed today
+	TaskScheduleToday TaskSchedule = 0
+	// TaskScheduleAnytime indicates tasks which can be completed anyday
 	TaskScheduleAnytime TaskSchedule = 1
+	// TaskScheduleSomeday indicates tasks which might never be completed
 	TaskScheduleSomeday TaskSchedule = 2
 )
 
@@ -43,7 +47,7 @@ const (
 type ItemKind string
 
 var (
-	// ItemKindChecklist identifies a CheckList
+	// ItemKindChecklistItem identifies a CheckList
 	ItemKindChecklistItem ItemKind = "ChecklistItem"
 	// ItemKindTask identifies a Task or Subtask
 	ItemKindTask ItemKind = "Task3"
@@ -55,8 +59,11 @@ var (
 	ItemKindTag ItemKind = "Tag3"
 )
 
+// Timestamp allows unix epochs represented as float or ints to be unmarshalled
+// into time.Time objects
 type Timestamp time.Time
 
+// UnmarshalJSON takes a unix epoch from float/ int and creates a time.Time instance
 func (t *Timestamp) UnmarshalJSON(bs []byte) error {
 	var d float64
 	if err := json.Unmarshal(bs, &d); err != nil {
@@ -66,17 +73,21 @@ func (t *Timestamp) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// Format returns a textual representation of the time value formatted according to layout
 func (t *Timestamp) Format(layout string) string {
 	return time.Time(*t).Format(layout)
 }
 
+// Time returns the underlying time.Time instance
 func (t *Timestamp) Time() *time.Time {
 	tt := time.Time(*t)
 	return &tt
 }
 
+// Boolean allows integers to be parsed into booleans, where 1 means true and 0 means false
 type Boolean bool
 
+// UnmarshalJSON takes an int and creates a boolean instance
 func (b *Boolean) UnmarshalJSON(bs []byte) error {
 	var d int
 	if err := json.Unmarshal(bs, &d); err != nil {

@@ -3,6 +3,7 @@ package thingscloud
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -11,19 +12,19 @@ import (
 // is modelled with pointers between the different maps, so concurrent modification
 // is not safe.
 type State struct {
-	Areas          map[string]Area
-	Tasks          map[string]Task
-	Tags           map[string]Tag
-	CheckListItems map[string]CheckListItem
+	Areas          map[string]*Area
+	Tasks          map[string]*Task
+	Tags           map[string]*Tag
+	CheckListItems map[string]*CheckListItem
 }
 
 // NewState creates a new, empty state
 func NewState() *State {
 	return &State{
-		Areas:          map[string]Area{},
-		Tags:           map[string]Tag{},
-		CheckListItems: map[string]CheckListItem{},
-		Tasks:          map[string]Task{},
+		Areas:          map[string]*Area{},
+		Tags:           map[string]*Tag{},
+		CheckListItems: map[string]*CheckListItem{},
+		Tasks:          map[string]*Task{},
 	}
 }
 
@@ -60,11 +61,12 @@ type taskItem struct {
 	} `json:"p"`
 }
 
-func (s *State) updateTask(item taskItem) Task {
+func (s *State) updateTask(item taskItem) *Task {
 	t, ok := s.Tasks[item.ID]
 	if !ok {
-		t = Task{ID: item.ID}
+		t = &Task{}
 	}
+	t.ID = item.ID
 
 	if item.P.Title != nil {
 		t.Title = *item.P.Title
@@ -119,11 +121,12 @@ type checkListItem struct {
 	} `json:"p"`
 }
 
-func (s *State) updateCheckListItem(item checkListItem) CheckListItem {
+func (s *State) updateCheckListItem(item checkListItem) *CheckListItem {
 	c, ok := s.CheckListItems[item.ID]
 	if !ok {
-		c = CheckListItem{ID: item.ID}
+		c = &CheckListItem{}
 	}
+	c.ID = item.ID
 
 	if item.P.CreationDate != nil {
 		t := item.P.CreationDate.Time()
@@ -160,11 +163,12 @@ type areaItem struct {
 	} `json:"p"`
 }
 
-func (s *State) updateArea(item areaItem) Area {
+func (s *State) updateArea(item areaItem) *Area {
 	a, ok := s.Areas[item.ID]
 	if !ok {
-		a = Area{ID: item.ID}
+		a = &Area{}
 	}
+	a.ID = item.ID
 
 	if item.P.Title != nil {
 		a.Title = *item.P.Title
@@ -175,30 +179,63 @@ func (s *State) updateArea(item areaItem) Area {
 
 // Tag describes the aggregated state of an Tag
 type Tag struct {
-	ID        string
-	Title     string // tt
-	ParentTag *Tag   // from `pm`
+	ID           string
+	Title        string
+	ParentTagIDs []string
+	SortOrder    string
+}
+
+type tagItemPayload struct {
+	IX           *int      `json:"ix"`
+	Title        *string   `json:"tt"`
+	SortOrder    *string   `json:"sh"`
+	ParentTagIDs *[]string `json:"pn"`
 }
 
 // tagItem describes an event on a tag
 type tagItem struct {
 	Item
-	P struct {
-		IX    *int     `json:"ix"`
-		Title *string  `json:"tt"`
-		SH    *string  `json:"sh"`
-		PN    []string `json:"pn"`
-	} `json:"p"`
+	P tagItemPayload `json:"p"`
 }
 
-func (s *State) updateTag(item tagItem) Tag {
+// SubTags returns all child tags for a given root, ensuring sort order is kept intact
+func (s *State) SubTags(root *Tag) []*Tag {
+	children := []*Tag{}
+	for _, tag := range s.Tags {
+		if tag == root {
+			continue
+		}
+
+		isChild := false
+		for _, parentID := range tag.ParentTagIDs {
+			isChild = isChild || parentID == root.ID
+		}
+		if isChild {
+			children = append(children, tag)
+		}
+	}
+	sort.Slice(children, func(i, j int) bool {
+		return children[i].SortOrder < children[j].SortOrder
+	})
+	return children
+}
+
+func (s *State) updateTag(item tagItem) *Tag {
 	t, ok := s.Tags[item.ID]
 	if !ok {
-		t = Tag{ID: item.ID}
+		t = &Tag{}
 	}
+	t.ID = item.ID
 
 	if item.P.Title != nil {
 		t.Title = *item.P.Title
+	}
+	if item.P.SortOrder != nil {
+		t.SortOrder = *item.P.SortOrder
+	}
+	if item.P.ParentTagIDs != nil {
+		var ids []string = *item.P.ParentTagIDs
+		t.ParentTagIDs = ids
 	}
 
 	return t

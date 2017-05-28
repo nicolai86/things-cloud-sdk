@@ -1,11 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	thingscloud "github.com/nicolai86/things-cloud-sdk"
 )
+
+func printTag(tag *thingscloud.Tag, state *thingscloud.State, indent string) {
+	fmt.Printf("%s-\t%s\n", indent, tag.Title)
+	children := state.SubTags(tag)
+	for _, child := range children {
+		printTag(child, state, fmt.Sprintf("%s\t", indent))
+	}
+}
 
 func main() {
 	c := thingscloud.New(thingscloud.APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
@@ -14,12 +23,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Login failed: %q\nPlease check your credentials.", err.Error())
 	}
-	log.Printf("User: %s\n", c.EMail)
+	fmt.Printf("User: %s\n", c.EMail)
 
 	if hs, err := c.Histories(); err != nil {
 		log.Fatalf("Failed to lookup histories: %q\n", err.Error())
 	} else {
-		log.Printf("Histories: %d\n", len(hs))
+		fmt.Printf("Histories: %d\n", len(hs))
 
 		if len(hs) > 0 {
 			history := hs[0]
@@ -46,24 +55,35 @@ func main() {
 					doneChecklistItems = doneChecklistItems + 1
 				}
 			}
-			log.Printf(`Summary:
+			fmt.Printf(`Summary:
 Areas:          %d
 Tasks:          %d (%d)
 CheckListItems: %d (%d)
 Tags:           %d
-`, len(state.Areas), len(state.Tasks), doneTasks, len(state.CheckListItems), doneChecklistItems, len(state.Tags))
+`, len(state.Areas),
+				len(state.Tasks), doneTasks,
+				len(state.CheckListItems), doneChecklistItems,
+				len(state.Tags))
+
+			fmt.Printf("Tags\n")
+			for _, tag := range state.Tags {
+				if len(tag.ParentTagIDs) != 0 {
+					continue
+				}
+				printTag(tag, state, "")
+			}
 		}
 	}
 
-	if h, err := c.CreateHistory(); err != nil {
-		log.Fatalf("Failed to create history: %q\n", err.Error())
-	} else {
-		log.Printf("Created new history…\n")
+	// if h, err := c.CreateHistory(); err != nil {
+	// 	log.Fatalf("Failed to create history: %q\n", err.Error())
+	// } else {
+	// 	fmt.Printf("Created new history…\n")
 
-		if err := h.Delete(); err != nil {
-			log.Fatalf("Failed to delete history: %q\n", err.Error())
-		} else {
-			log.Printf("Deleted new history…\n")
-		}
-	}
+	// 	if err := h.Delete(); err != nil {
+	// 		log.Fatalf("Failed to delete history: %q\n", err.Error())
+	// 	} else {
+	// 		fmt.Printf("Deleted new history…\n")
+	// 	}
+	// }
 }

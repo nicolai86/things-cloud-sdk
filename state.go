@@ -28,7 +28,48 @@ func NewState() *State {
 	}
 }
 
+// 0|uuid|TEXT|0||1
+// 1|logInterval|INTEGER|0||0
+// 2|manualLogDate|REAL|0||0
+// 3|groupTodayByParent|INTEGER|0||0
+type Setting struct{}
+
 // Task describes a Task inside things.
+// 0|uuid|TEXT|0||1
+// 1|userModificationDate|REAL|0||0
+// 2|creationDate|REAL|0||0
+// 3|trashed|INTEGER|0||0
+// 4|type|INTEGER|0||0
+// 5|title|TEXT|0||0
+// 6|notes|TEXT|0||0
+// 7|dueDate|REAL|0||0
+// 8|dueDateOffset|INTEGER|0||0
+// 9|status|INTEGER|0||0
+// 10|stopDate|REAL|0||0
+// 11|start|INTEGER|0||0
+// 12|startDate|REAL|0||0
+// 13|index|INTEGER|0||0
+// 14|todayIndex|INTEGER|0||0
+// 15|area|TEXT|0||0
+// 16|project|TEXT|0||0
+// 17|repeatingTemplate|TEXT|0||0
+// 18|delegate|TEXT|0||0
+// 19|recurrenceRule|BLOB|0||0
+// 20|instanceCreationStartDate|REAL|0||0
+// 21|instanceCreationPaused|INTEGER|0||0
+// 22|instanceCreationCount|INTEGER|0||0
+// 23|afterCompletionReferenceDate|REAL|0||0
+// 24|actionGroup|TEXT|0||0
+// 25|untrashedLeafActionsCount|INTEGER|0||0
+// 26|openUntrashedLeafActionsCount|INTEGER|0||0
+// 27|checklistItemsCount|INTEGER|0||0
+// 28|openChecklistItemsCount|INTEGER|0||0
+// 29|startBucket|INTEGER|0||0
+// 30|alarmTimeOffset|REAL|0||0
+// 31|lastAlarmInteractionDate|REAL|0||0
+// 32|todayIndexReferenceDate|REAL|0||0
+// 33|nextInstanceStartDate|REAL|0||0
+// 34|dueDateSuppressionDate|REAL|0||0
 type Task struct {
 	ID               string
 	CreationDate     time.Time
@@ -262,6 +303,14 @@ func (s *State) CheckListItemsByTask(task *Task) []*CheckList {
 }
 
 // CheckList describes a check list item
+//0|uuid|TEXT|0||1
+//1|userModificationDate|REAL|0||0
+//2|creationDate|REAL|0||0
+//3|title|TEXT|0||0
+//4|status|INTEGER|0||0
+//5|stopDate|REAL|0||0
+//6|index|INTEGER|0||0
+//7|task|TEXT|0||0
 type CheckList struct {
 	ID               string
 	CreationDate     time.Time
@@ -321,6 +370,10 @@ func (s *State) updateCheckListItem(item CheckListItem) *CheckList {
 }
 
 // Area describes an Area inside things. An Area is a container for tasks
+// 0|uuid|TEXT|0||1
+// 1|title|TEXT|0||0
+// 2|visible|INTEGER|0||0
+// 3|index|INTEGER|0||0
 type Area struct {
 	ID    string
 	Title string
@@ -359,6 +412,12 @@ func (s *State) updateArea(item AreaItem) *Area {
 }
 
 // Tag describes the aggregated state of an Tag
+// 0|uuid|TEXT|0||1
+// 1|title|TEXT|0||0
+// 2|shortcut|TEXT|0||0
+// 3|usedDate|REAL|0||0
+// 4|parent|TEXT|0||0
+// 5|index|INTEGER|0||0
 type Tag struct {
 	ID           string
 	Title        string

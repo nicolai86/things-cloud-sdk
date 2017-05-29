@@ -71,7 +71,7 @@ type Setting struct{}
 // 33|nextInstanceStartDate|REAL|0||0
 // 34|dueDateSuppressionDate|REAL|0||0
 type Task struct {
-	ID               string
+	UUID             string
 	CreationDate     time.Time
 	ModificationDate *time.Time
 	Status           TaskStatus
@@ -103,7 +103,7 @@ func (s *State) Subtasks(root *Task) []*Task {
 		}
 		isChild := false
 		for _, taskID := range task.ParentTaskIDs {
-			isChild = isChild || taskID == root.ID
+			isChild = isChild || taskID == root.UUID
 		}
 		if isChild {
 			tasks = append(tasks, task)
@@ -164,7 +164,7 @@ func (s *State) TasksByArea(area *Area) []*Task {
 		}
 		isChild := false
 		for _, areaID := range task.AreaIDs {
-			isChild = isChild || areaID == area.ID
+			isChild = isChild || areaID == area.UUID
 		}
 		if isChild {
 			tasks = append(tasks, task)
@@ -179,10 +179,10 @@ func (s *State) TasksByArea(area *Area) []*Task {
 type TaskItemPayload struct {
 	Index             *int          `json:"ix,omitempty"`
 	CreationDate      *Timestamp    `json:"cd,omitempty"`
-	ModificationDate  *Timestamp    `json:"md,omitempty"`
+	ModificationDate  *Timestamp    `json:"md,omitempty"` // ok
 	ScheduledDate     *Timestamp    `json:"sr,omitempty"`
 	CompletionDate    *Timestamp    `json:"sp,omitempty"`
-	DeadlineDate      *Timestamp    `json:"dd,omitempty"`
+	DeadlineDate      *Timestamp    `json:"dd,omitempty"` //
 	Status            *TaskStatus   `json:"ss,omitempty"`
 	IsProject         *Boolean      `json:"tp,omitempty"`
 	Title             *string       `json:"tt,omitempty"`
@@ -216,18 +216,18 @@ type TaskItem struct {
 	P TaskItemPayload `json:"p"`
 }
 
-func (t TaskItem) ID() string {
-	return t.Item.ID
+func (t TaskItem) UUID() string {
+	return t.Item.UUID
 }
 
 func (s *State) updateTask(item TaskItem) *Task {
-	t, ok := s.Tasks[item.ID()]
+	t, ok := s.Tasks[item.UUID()]
 	if !ok {
 		t = &Task{
 			Schedule: TaskScheduleAnytime,
 		}
 	}
-	t.ID = item.ID()
+	t.UUID = item.UUID()
 
 	if item.P.Title != nil {
 		t.Title = *item.P.Title
@@ -290,7 +290,7 @@ func (s *State) CheckListItemsByTask(task *Task) []*CheckList {
 		}
 		isChild := false
 		for _, taskID := range item.TaskIDs {
-			isChild = isChild || task.ID == taskID
+			isChild = isChild || task.UUID == taskID
 		}
 		if isChild {
 			items = append(items, item)
@@ -312,7 +312,7 @@ func (s *State) CheckListItemsByTask(task *Task) []*CheckList {
 //6|index|INTEGER|0||0
 //7|task|TEXT|0||0
 type CheckList struct {
-	ID               string
+	UUID             string
 	CreationDate     time.Time
 	ModificationDate *time.Time
 	Status           TaskStatus
@@ -339,11 +339,11 @@ type CheckListItem struct {
 }
 
 func (s *State) updateCheckListItem(item CheckListItem) *CheckList {
-	c, ok := s.CheckListItems[item.ID]
+	c, ok := s.CheckListItems[item.UUID]
 	if !ok {
 		c = &CheckList{}
 	}
-	c.ID = item.ID
+	c.UUID = item.UUID
 
 	if item.P.CreationDate != nil {
 		t := item.P.CreationDate.Time()
@@ -375,7 +375,7 @@ func (s *State) updateCheckListItem(item CheckListItem) *CheckList {
 // 2|visible|INTEGER|0||0
 // 3|index|INTEGER|0||0
 type Area struct {
-	ID    string
+	UUID  string
 	Title string
 	Tags  []*Tag
 	Tasks []*Task
@@ -394,15 +394,15 @@ type AreaItem struct {
 }
 
 func (item AreaItem) ID() string {
-	return item.Item.ID
+	return item.Item.UUID
 }
 
 func (s *State) updateArea(item AreaItem) *Area {
-	a, ok := s.Areas[item.ID()]
+	a, ok := s.Areas[item.UUID]
 	if !ok {
 		a = &Area{}
 	}
-	a.ID = item.ID()
+	a.UUID = item.UUID
 
 	if item.P.Title != nil {
 		a.Title = *item.P.Title
@@ -419,7 +419,7 @@ func (s *State) updateArea(item AreaItem) *Area {
 // 4|parent|TEXT|0||0
 // 5|index|INTEGER|0||0
 type Tag struct {
-	ID           string
+	UUID         string
 	Title        string
 	ParentTagIDs []string
 	ShortHand    string
@@ -438,8 +438,8 @@ type TagItem struct {
 	P TagItemPayload `json:"p"`
 }
 
-func (t TagItem) ID() string {
-	return t.Item.ID
+func (t TagItem) UUID() string {
+	return t.Item.UUID
 }
 
 // SubTags returns all child tags for a given root, ensuring sort order is kept intact
@@ -452,7 +452,7 @@ func (s *State) SubTags(root *Tag) []*Tag {
 
 		isChild := false
 		for _, parentID := range tag.ParentTagIDs {
-			isChild = isChild || parentID == root.ID
+			isChild = isChild || parentID == root.UUID
 		}
 		if isChild {
 			children = append(children, tag)
@@ -465,11 +465,11 @@ func (s *State) SubTags(root *Tag) []*Tag {
 }
 
 func (s *State) updateTag(item TagItem) *Tag {
-	t, ok := s.Tags[item.ID()]
+	t, ok := s.Tags[item.UUID()]
 	if !ok {
 		t = &Tag{}
 	}
-	t.ID = item.ID()
+	t.UUID = item.UUID()
 
 	if item.P.Title != nil {
 		t.Title = *item.P.Title
@@ -499,9 +499,9 @@ func (s *State) Update(items ...Item) error {
 			case ItemActionCreated:
 				fallthrough
 			case ItemActionModified:
-				s.Tasks[item.ID()] = s.updateTask(item)
+				s.Tasks[item.UUID()] = s.updateTask(item)
 			case ItemActionDeleted:
-				delete(s.Tasks, item.ID())
+				delete(s.Tasks, item.UUID())
 			default:
 				fmt.Printf("Action %q on %q is not implemented yet", item.Action, rawItem.Kind)
 			}
@@ -516,9 +516,9 @@ func (s *State) Update(items ...Item) error {
 			case ItemActionCreated:
 				fallthrough
 			case ItemActionModified:
-				s.CheckListItems[item.ID] = s.updateCheckListItem(item)
+				s.CheckListItems[item.UUID] = s.updateCheckListItem(item)
 			case ItemActionDeleted:
-				delete(s.CheckListItems, item.ID)
+				delete(s.CheckListItems, item.UUID)
 			default:
 				fmt.Printf("Action %q on %q is not implemented yet", item.Action, rawItem.Kind)
 			}
@@ -533,10 +533,10 @@ func (s *State) Update(items ...Item) error {
 			case ItemActionCreated:
 				fallthrough
 			case ItemActionModified:
-				s.Areas[item.ID()] = s.updateArea(item)
+				s.Areas[item.UUID] = s.updateArea(item)
 
 			case ItemActionDeleted:
-				delete(s.Areas, item.ID())
+				delete(s.Areas, item.UUID)
 			default:
 				fmt.Printf("Action %q on %q is not implemented yet", item.Action, rawItem.Kind)
 			}
@@ -551,9 +551,9 @@ func (s *State) Update(items ...Item) error {
 			case ItemActionCreated:
 				fallthrough
 			case ItemActionModified:
-				s.Tags[item.ID()] = s.updateTag(item)
+				s.Tags[item.UUID()] = s.updateTag(item)
 			case ItemActionDeleted:
-				delete(s.Tags, item.ID())
+				delete(s.Tags, item.UUID())
 			default:
 				fmt.Printf("Action %q on %q is not implemented yet", item.Action, rawItem.Kind)
 			}

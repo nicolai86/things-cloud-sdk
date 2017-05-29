@@ -284,24 +284,24 @@ func TestState_Update(t *testing.T) {
 func TestState_updateTag(t *testing.T) {
 	s := NewState()
 	a := &Tag{
-		ID:    "CC-Things-Tag-High",
+		UUID:  "CC-Things-Tag-High",
 		Title: "High",
 	}
 	b := &Tag{
-		ID:    "CC-Things-Tag-Priority",
+		UUID:  "CC-Things-Tag-Priority",
 		Title: "!!",
 	}
 	c := &Tag{
-		ID:    "CC-Things-Tag-Errand",
+		UUID:  "CC-Things-Tag-Errand",
 		Title: "Errand",
 	}
-	s.Tags[a.ID] = a
-	s.Tags[b.ID] = b
-	s.Tags[c.ID] = c
+	s.Tags[a.UUID] = a
+	s.Tags[b.UUID] = b
+	s.Tags[c.UUID] = c
 
 	t.Run("sets Title", func(t *testing.T) {
 		tag := s.updateTag(TagItem{
-			Item: Item{ID: a.ID},
+			Item: Item{UUID: a.UUID},
 			P: TagItemPayload{
 				Title: stringVal("a title"),
 			},
@@ -314,38 +314,38 @@ func TestState_updateTag(t *testing.T) {
 	t.Run("hierarchy", func(t *testing.T) {
 		t.Run("create", func(t *testing.T) {
 			a2 := s.updateTag(TagItem{
-				Item: Item{ID: a.ID},
+				Item: Item{UUID: a.UUID},
 				P: TagItemPayload{
-					ParentTagIDs: &[]string{b.ID},
+					ParentTagIDs: &[]string{b.UUID},
 				},
 			})
-			if a2.ParentTagIDs[0] != b.ID {
-				t.Fatalf("Expected parent of %q, but got %q", b.ID, a2.ParentTagIDs)
+			if a2.ParentTagIDs[0] != b.UUID {
+				t.Fatalf("Expected parent of %q, but got %q", b.UUID, a2.ParentTagIDs)
 			}
 		})
 		t.Run("change", func(t *testing.T) {
 			a2 := s.updateTag(TagItem{
-				Item: Item{ID: a.ID},
+				Item: Item{UUID: a.UUID},
 				P: TagItemPayload{
-					ParentTagIDs: &[]string{c.ID},
+					ParentTagIDs: &[]string{c.UUID},
 				},
 			})
-			if a2.ParentTagIDs[0] != c.ID {
-				t.Fatalf("Expected parent of %q, but got %q", c.ID, a2.ParentTagIDs)
+			if a2.ParentTagIDs[0] != c.UUID {
+				t.Fatalf("Expected parent of %q, but got %q", c.UUID, a2.ParentTagIDs)
 			}
 		})
 		t.Run("no change", func(t *testing.T) {
 			a2 := s.updateTag(TagItem{
-				Item: Item{ID: a.ID},
+				Item: Item{UUID: a.UUID},
 				P:    TagItemPayload{},
 			})
-			if a2.ParentTagIDs[0] != c.ID {
-				t.Fatalf("Expected parent of %q, but got %q", c.ID, a2.ParentTagIDs)
+			if a2.ParentTagIDs[0] != c.UUID {
+				t.Fatalf("Expected parent of %q, but got %q", c.UUID, a2.ParentTagIDs)
 			}
 		})
 		t.Run("delete", func(t *testing.T) {
 			a2 := s.updateTag(TagItem{
-				Item: Item{ID: a.ID},
+				Item: Item{UUID: a.UUID},
 				P: TagItemPayload{
 					ParentTagIDs: &[]string{},
 				},

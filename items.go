@@ -12,7 +12,7 @@ import (
 // Common items are the creation of a task, area or checklist, as well as modifying attributes
 // or marking things as done.
 type Item struct {
-	ID     string          `json:"-"`
+	UUID   string          `json:"-"`
 	P      json.RawMessage `json:"p"`
 	Kind   ItemKind        `json:"e"`
 	Action ItemAction      `json:"t"`
@@ -62,7 +62,7 @@ func (h *History) Items(opts ItemsOptions) ([]Item, error) {
 	var items = []Item{}
 	for _, m := range v.Items {
 		for id, item := range m {
-			item.ID = id
+			item.UUID = id
 			items = append(items, item)
 		}
 	}

@@ -152,7 +152,7 @@ type writeResponse struct {
 }
 
 type Identifiable interface {
-	ID() string
+	UUID() string
 }
 
 func (h *History) Write(items ...Identifiable) error {
@@ -166,7 +166,7 @@ func (h *History) Write(items ...Identifiable) error {
 	}
 	for _, item := range items {
 		m := map[string]interface{}{}
-		m[item.ID()] = item
+		m[item.UUID()] = item
 		v.Items = append(v.Items, m)
 	}
 	bs, err := json.Marshal(v)

@@ -36,9 +36,8 @@ func (c *Client) Verify() (*VerifyResponse, error) {
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusUnauthorized {
 			return nil, ErrUnauthorized
-		} else {
-			return nil, fmt.Errorf("http response code: %s", resp.Status)
 		}
+		return nil, fmt.Errorf("http response code: %s", resp.Status)
 	}
 	var v VerifyResponse
 	bs, err := ioutil.ReadAll(resp.Body)

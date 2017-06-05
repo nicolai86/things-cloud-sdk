@@ -65,9 +65,8 @@ func (c *Client) Histories() ([]*History, error) {
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusUnauthorized {
 			return nil, ErrUnauthorized
-		} else {
-			return nil, fmt.Errorf("http response code: %s", resp.Status)
 		}
+		return nil, fmt.Errorf("http response code: %s", resp.Status)
 	}
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -104,9 +103,9 @@ func (c *Client) CreateHistory() (*History, error) {
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusUnauthorized {
 			return nil, ErrUnauthorized
-		} else {
-			return nil, fmt.Errorf("http response code: %s", resp.Status)
 		}
+		return nil, fmt.Errorf("http response code: %s", resp.Status)
+
 	}
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

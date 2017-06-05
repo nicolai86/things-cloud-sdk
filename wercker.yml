@@ -18,3 +18,9 @@ build:
         name: go test
         code: |
           go test ./...
+
+    - script:
+        name: golint
+        code: |
+          go get github.com/golang/lint/golint
+          golint -set_exit_status ./...

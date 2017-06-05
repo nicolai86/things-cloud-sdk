@@ -149,7 +149,7 @@ func (s *State) updateTag(item things.TagActionItem) *things.Tag {
 		t.ShortHand = *item.P.ShortHand
 	}
 	if item.P.ParentTagIDs != nil {
-		var ids []string = *item.P.ParentTagIDs
+		var ids = *item.P.ParentTagIDs
 		t.ParentTagIDs = ids
 	}
 
@@ -278,6 +278,7 @@ func hasArea(task *things.Task, state *State) bool {
 	return false
 }
 
+// TasksWithoutArea looks up top level tasks not assigned to any area, e.g. just created and placed in today
 func (s *State) TasksWithoutArea() []*things.Task {
 	tasks := []*things.Task{}
 	for _, task := range s.Tasks {

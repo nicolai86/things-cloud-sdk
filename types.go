@@ -73,6 +73,7 @@ func (t *Timestamp) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// MarshalJSON convers a timestamp into unix nano representation
 func (t *Timestamp) MarshalJSON() ([]byte, error) {
 	var tt = time.Time(*t).Unix()
 	return json.Marshal(tt)
@@ -102,6 +103,7 @@ func (b *Boolean) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// MarshalJSON takes a boolean and serializes it as an integer
 func (b *Boolean) MarshalJSON() ([]byte, error) {
 	var d = 0
 	if *b {
@@ -276,6 +278,7 @@ func (t TagActionItem) UUID() string {
 	return t.Item.UUID
 }
 
+// Setting describes things settings
 // 0|uuid|TEXT|0||1
 // 1|logInterval|INTEGER|0||0
 // 2|manualLogDate|REAL|0||0

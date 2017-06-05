@@ -1,11 +1,11 @@
 package thingscloud
 
+//go:generate stringer -type ItemAction,TaskStatus,TaskSchedule
+
 import (
 	"encoding/json"
 	"time"
 )
-
-//go:generate stringer -type ItemAction,TaskStatus,TaskSchedule
 
 // ItemAction describes possible actions on Items
 type ItemAction int
@@ -315,7 +315,7 @@ func (item AreaActionItem) UUID() string {
 	return item.Item.UUID
 }
 
-// CheckList describes a check list item
+// CheckListItem describes a check list item
 //0|uuid|TEXT|0||1
 //1|userModificationDate|REAL|0||0
 //2|creationDate|REAL|0||0
@@ -324,7 +324,7 @@ func (item AreaActionItem) UUID() string {
 //5|stopDate|REAL|0||0
 //6|index|INTEGER|0||0
 //7|task|TEXT|0||0
-type CheckList struct {
+type CheckListItem struct {
 	UUID             string
 	CreationDate     time.Time
 	ModificationDate *time.Time

@@ -19,11 +19,11 @@ func printTag(tag *thingscloud.Tag, state *memory.State, indent string) {
 
 func printTask(task *thingscloud.Task, state *memory.State, indent string) {
 	fmt.Printf("%s-\t%s\n", indent, task.Title)
-	checklist := state.CheckListItemsByTask(task)
+	checklist := state.CheckListItemsByTask(task, memory.ListOption{})
 	for _, item := range checklist {
 		fmt.Printf("%s+%s\n", indent, item.Title)
 	}
-	children := state.Subtasks(task)
+	children := state.Subtasks(task, memory.ListOption{})
 	for _, child := range children {
 		printTask(child, state, fmt.Sprintf("%s\t", indent))
 	}
@@ -117,7 +117,7 @@ Tags:           %d
 			for _, area := range state.Areas {
 				fmt.Printf("-\t%s\n", area.Title)
 
-				for _, task := range state.TasksByArea(area) {
+				for _, task := range state.TasksByArea(area, memory.ListOption{}) {
 					printTask(task, state, "|")
 				}
 			}

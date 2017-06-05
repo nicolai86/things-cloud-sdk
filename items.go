@@ -71,5 +71,6 @@ func (h *History) Items(opts ItemsOptions) ([]Item, error) {
 			items = append(items, item)
 		}
 	}
+	h.LatestServerIndex = v.CurrentItemIndex
 	return items, nil
 }

@@ -16,7 +16,7 @@ type State struct {
 	Areas          map[string]*things.Area
 	Tasks          map[string]*things.Task
 	Tags           map[string]*things.Tag
-	CheckListItems map[string]*things.CheckList
+	CheckListItems map[string]*things.CheckListItem
 }
 
 // NewState creates a new, empty state
@@ -24,7 +24,7 @@ func NewState() *State {
 	return &State{
 		Areas:          map[string]*things.Area{},
 		Tags:           map[string]*things.Tag{},
-		CheckListItems: map[string]*things.CheckList{},
+		CheckListItems: map[string]*things.CheckListItem{},
 		Tasks:          map[string]*things.Task{},
 	}
 }
@@ -90,10 +90,10 @@ func (s *State) updateTask(item things.TaskActionItem) *things.Task {
 	return t
 }
 
-func (s *State) updateCheckListItem(item things.CheckListActionItem) *things.CheckList {
+func (s *State) updateCheckListItem(item things.CheckListActionItem) *things.CheckListItem {
 	c, ok := s.CheckListItems[item.UUID()]
 	if !ok {
-		c = &things.CheckList{}
+		c = &things.CheckListItem{}
 	}
 	c.UUID = item.UUID()
 
@@ -249,16 +249,16 @@ func (s *State) Projects() []*things.Task {
 }
 
 // Subtasks returns tasks grouped together with under a root task
-func (s *State) Subtasks(root *things.Task) []*things.Task {
+func (s *State) Subtasks(root *things.Task, opts ListOption) []*things.Task {
 	tasks := []*things.Task{}
 	for _, task := range s.Tasks {
-		if task.Status == things.TaskStatusCompleted {
+		if task.Status == things.TaskStatusCompleted && opts.ExcludeCompleted {
 			continue
 		}
 		if task == root {
 			continue
 		}
-		if task.InTrash {
+		if task.InTrash && opts.ExcludeInTrash {
 			continue
 		}
 		isChild := false
@@ -313,14 +313,43 @@ func (s *State) TasksWithoutArea() []*things.Task {
 	return tasks
 }
 
-// TasksByArea returns tasks associated with a given area
-func (s *State) TasksByArea(area *things.Area) []*things.Task {
-	tasks := []*things.Task{}
+// AreaByName returns an Area if the name matches
+func (s *State) AreaByName(name string) *things.Area {
+	for _, area := range s.Areas {
+		if area.Title == name {
+			return area
+		}
+	}
+	return nil
+}
+
+// ProjectByName returns an project if the name matches
+func (s *State) ProjectByName(name string) *things.Task {
 	for _, task := range s.Tasks {
-		if task.Status == things.TaskStatusCompleted {
+		if !task.IsProject {
 			continue
 		}
-		if task.InTrash {
+		if task.Title == name {
+			return task
+		}
+	}
+	return nil
+}
+
+// ListOption allows the result set to be filtered
+type ListOption struct {
+	ExcludeCompleted bool
+	ExcludeInTrash   bool
+}
+
+// TasksByArea returns tasks associated with a given area
+func (s *State) TasksByArea(area *things.Area, opts ListOption) []*things.Task {
+	tasks := []*things.Task{}
+	for _, task := range s.Tasks {
+		if task.Status == things.TaskStatusCompleted && opts.ExcludeCompleted {
+			continue
+		}
+		if task.InTrash && opts.ExcludeInTrash {
 			continue
 		}
 		isChild := false
@@ -338,10 +367,10 @@ func (s *State) TasksByArea(area *things.Area) []*things.Task {
 }
 
 // CheckListItemsByTask returns check lists associated with a particular item
-func (s *State) CheckListItemsByTask(task *things.Task) []*things.CheckList {
-	items := []*things.CheckList{}
+func (s *State) CheckListItemsByTask(task *things.Task, opts ListOption) []*things.CheckListItem {
+	items := []*things.CheckListItem{}
 	for _, item := range s.CheckListItems {
-		if item.Status == things.TaskStatusCompleted {
+		if item.Status == things.TaskStatusCompleted && opts.ExcludeCompleted {
 			continue
 		}
 		isChild := false

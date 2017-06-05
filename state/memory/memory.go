@@ -236,6 +236,18 @@ func (s *State) Update(items ...things.Item) error {
 	return nil
 }
 
+// Projects returns all projects for this history
+func (s *State) Projects() []*things.Task {
+	tasks := []*things.Task{}
+	for _, task := range s.Tasks {
+		if !task.IsProject {
+			continue
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks
+}
+
 // Subtasks returns tasks grouped together with under a root task
 func (s *State) Subtasks(root *things.Task) []*things.Task {
 	tasks := []*things.Task{}

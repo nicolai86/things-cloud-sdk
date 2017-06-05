@@ -6,9 +6,10 @@ import (
 	"os"
 
 	thingscloud "github.com/nicolai86/things-cloud-sdk"
+	memory "github.com/nicolai86/things-cloud-sdk/state/memory"
 )
 
-func printTag(tag *thingscloud.Tag, state *thingscloud.State, indent string) {
+func printTag(tag *thingscloud.Tag, state *memory.State, indent string) {
 	fmt.Printf("%s-\t%s\n", indent, tag.Title)
 	children := state.SubTags(tag)
 	for _, child := range children {
@@ -16,7 +17,7 @@ func printTag(tag *thingscloud.Tag, state *thingscloud.State, indent string) {
 	}
 }
 
-func printTask(task *thingscloud.Task, state *thingscloud.State, indent string) {
+func printTask(task *thingscloud.Task, state *memory.State, indent string) {
 	fmt.Printf("%s-\t%s\n", indent, task.Title)
 	checklist := state.CheckListItemsByTask(task)
 	for _, item := range checklist {
@@ -50,18 +51,18 @@ func main() {
 			history := hs[0]
 			history.Sync()
 
-			state := thingscloud.NewState()
+			state := memory.NewState()
 
 			// pending := thingscloud.TaskStatusPending
 			// anytime := thingscloud.TaskScheduleAnytime
 			// yes := thingscloud.Boolean(true)
-			if err := history.Write(thingscloud.TaskItem{
+			if err := history.Write(thingscloud.TaskActionItem{
 				Item: thingscloud.Item{
 					Kind:   thingscloud.ItemKindTask,
 					Action: thingscloud.ItemActionDeleted,
 					UUID:   "54152210-ABFA-4F9F-81AC-7F50FBDEDC2G",
 				},
-				P: thingscloud.TaskItemPayload{
+				P: thingscloud.TaskActionItemPayload{
 				// Title: stringVal("test 5"),
 				// Schedule:     &anytime,
 				// Status:       &pending,

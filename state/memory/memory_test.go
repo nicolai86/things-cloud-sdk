@@ -1,9 +1,15 @@
-package thingscloud
+package memory
 
 import (
 	"encoding/json"
 	"testing"
+
+	things "github.com/nicolai86/things-cloud-sdk"
 )
+
+func stringVal(str string) *string {
+	return &str
+}
 
 var newAreaPayload = `{
   "tt": "New Area"
@@ -69,9 +75,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Create Area", func(t *testing.T) {
 			t.Parallel()
 			s := NewState()
-			if err := s.Update(Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindArea,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindArea,
 				P:      json.RawMessage(newAreaPayload),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -85,9 +91,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Create Tag", func(t *testing.T) {
 			t.Parallel()
 			s := NewState()
-			if err := s.Update(Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindTag,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindTag,
 				P:      json.RawMessage(newTagPayload),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -101,9 +107,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Create CheckListItem", func(t *testing.T) {
 			t.Parallel()
 			s := NewState()
-			if err := s.Update(Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindChecklistItem,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindChecklistItem,
 				P:      json.RawMessage(newCheckListItemPayload),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -117,9 +123,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Create Task", func(t *testing.T) {
 			t.Parallel()
 			s := NewState()
-			if err := s.Update(Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindTask,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindTask,
 				P:      json.RawMessage(newTaskPayload),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -135,21 +141,21 @@ func TestState_Update(t *testing.T) {
 		t.Parallel()
 		newState := func() *State {
 			s := NewState()
-			s.Update(Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindArea,
+			s.Update(things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindArea,
 				P:      json.RawMessage(newAreaPayload),
-			}, Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindTag,
+			}, things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindTag,
 				P:      json.RawMessage(newTagPayload),
-			}, Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindChecklistItem,
+			}, things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindChecklistItem,
 				P:      json.RawMessage(newCheckListItemPayload),
-			}, Item{
-				Action: ItemActionCreated,
-				Kind:   ItemKindTask,
+			}, things.Item{
+				Action: things.ItemActionCreated,
+				Kind:   things.ItemKindTask,
 				P:      json.RawMessage(newTaskPayload),
 			})
 			return s
@@ -158,9 +164,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Update Task", func(t *testing.T) {
 			t.Parallel()
 			s := newState()
-			if err := s.Update(Item{
-				Action: ItemActionModified,
-				Kind:   ItemKindTask,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionModified,
+				Kind:   things.ItemKindTask,
 				P:      json.RawMessage(`{"tt": "Modified Title"}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -173,9 +179,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Delete Task", func(t *testing.T) {
 			t.Parallel()
 			s := newState()
-			if err := s.Update(Item{
-				Action: ItemActionDeleted,
-				Kind:   ItemKindTask,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionDeleted,
+				Kind:   things.ItemKindTask,
 				P:      json.RawMessage(`{}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -188,9 +194,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Update CheckListItem", func(t *testing.T) {
 			t.Parallel()
 			s := newState()
-			if err := s.Update(Item{
-				Action: ItemActionModified,
-				Kind:   ItemKindChecklistItem,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionModified,
+				Kind:   things.ItemKindChecklistItem,
 				P:      json.RawMessage(`{"tt": "Modified Title"}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -203,9 +209,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Delete ChecklistItem", func(t *testing.T) {
 			t.Parallel()
 			s := newState()
-			if err := s.Update(Item{
-				Action: ItemActionDeleted,
-				Kind:   ItemKindChecklistItem,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionDeleted,
+				Kind:   things.ItemKindChecklistItem,
 				P:      json.RawMessage(`{}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -218,9 +224,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Update Tag", func(t *testing.T) {
 			t.Parallel()
 			s := newState()
-			if err := s.Update(Item{
-				Action: ItemActionModified,
-				Kind:   ItemKindTag,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionModified,
+				Kind:   things.ItemKindTag,
 				P:      json.RawMessage(`{"tt": "Modified Tag"}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -233,9 +239,9 @@ func TestState_Update(t *testing.T) {
 		t.Run("Delete Tag", func(t *testing.T) {
 			t.Parallel()
 			s := newState()
-			if err := s.Update(Item{
-				Action: ItemActionDeleted,
-				Kind:   ItemKindTag,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionDeleted,
+				Kind:   things.ItemKindTag,
 				P:      json.RawMessage(`{}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -249,9 +255,9 @@ func TestState_Update(t *testing.T) {
 			t.Parallel()
 			s := newState()
 
-			if err := s.Update(Item{
-				Action: ItemActionModified,
-				Kind:   ItemKindArea,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionModified,
+				Kind:   things.ItemKindArea,
 				P:      json.RawMessage(`{"tt": "Modified Area"}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -266,9 +272,9 @@ func TestState_Update(t *testing.T) {
 			t.Parallel()
 			s := newState()
 
-			if err := s.Update(Item{
-				Action: ItemActionDeleted,
-				Kind:   ItemKindArea,
+			if err := s.Update(things.Item{
+				Action: things.ItemActionDeleted,
+				Kind:   things.ItemKindArea,
 				P:      json.RawMessage(`{}`),
 			}); err != nil {
 				t.Fatal(err.Error())
@@ -283,15 +289,15 @@ func TestState_Update(t *testing.T) {
 
 func TestState_updateTag(t *testing.T) {
 	s := NewState()
-	a := &Tag{
+	a := &things.Tag{
 		UUID:  "CC-Things-Tag-High",
 		Title: "High",
 	}
-	b := &Tag{
+	b := &things.Tag{
 		UUID:  "CC-Things-Tag-Priority",
 		Title: "!!",
 	}
-	c := &Tag{
+	c := &things.Tag{
 		UUID:  "CC-Things-Tag-Errand",
 		Title: "Errand",
 	}
@@ -300,9 +306,9 @@ func TestState_updateTag(t *testing.T) {
 	s.Tags[c.UUID] = c
 
 	t.Run("sets Title", func(t *testing.T) {
-		tag := s.updateTag(TagItem{
-			Item: Item{UUID: a.UUID},
-			P: TagItemPayload{
+		tag := s.updateTag(things.TagActionItem{
+			Item: things.Item{UUID: a.UUID},
+			P: things.TagActionItemPayload{
 				Title: stringVal("a title"),
 			},
 		})
@@ -313,9 +319,9 @@ func TestState_updateTag(t *testing.T) {
 
 	t.Run("hierarchy", func(t *testing.T) {
 		t.Run("create", func(t *testing.T) {
-			a2 := s.updateTag(TagItem{
-				Item: Item{UUID: a.UUID},
-				P: TagItemPayload{
+			a2 := s.updateTag(things.TagActionItem{
+				Item: things.Item{UUID: a.UUID},
+				P: things.TagActionItemPayload{
 					ParentTagIDs: &[]string{b.UUID},
 				},
 			})
@@ -324,9 +330,9 @@ func TestState_updateTag(t *testing.T) {
 			}
 		})
 		t.Run("change", func(t *testing.T) {
-			a2 := s.updateTag(TagItem{
-				Item: Item{UUID: a.UUID},
-				P: TagItemPayload{
+			a2 := s.updateTag(things.TagActionItem{
+				Item: things.Item{UUID: a.UUID},
+				P: things.TagActionItemPayload{
 					ParentTagIDs: &[]string{c.UUID},
 				},
 			})
@@ -335,18 +341,18 @@ func TestState_updateTag(t *testing.T) {
 			}
 		})
 		t.Run("no change", func(t *testing.T) {
-			a2 := s.updateTag(TagItem{
-				Item: Item{UUID: a.UUID},
-				P:    TagItemPayload{},
+			a2 := s.updateTag(things.TagActionItem{
+				Item: things.Item{UUID: a.UUID},
+				P:    things.TagActionItemPayload{},
 			})
 			if a2.ParentTagIDs[0] != c.UUID {
 				t.Fatalf("Expected parent of %q, but got %q", c.UUID, a2.ParentTagIDs)
 			}
 		})
 		t.Run("delete", func(t *testing.T) {
-			a2 := s.updateTag(TagItem{
-				Item: Item{UUID: a.UUID},
-				P: TagItemPayload{
+			a2 := s.updateTag(things.TagActionItem{
+				Item: things.Item{UUID: a.UUID},
+				P: things.TagActionItemPayload{
 					ParentTagIDs: &[]string{},
 				},
 			})

@@ -27,10 +27,15 @@ type itemsResponse struct {
 	CurrentItemIndex       int               `json:"current-item-index"`
 }
 
+// ItemsOptions allows a client to pickup changes from a specific index
 type ItemsOptions struct {
 	StartIndex int
 }
 
+// Items fetches changes from thingscloud. Every change contains multiple items which have been modified.
+// The Items method unwraps these objects and returns a list instead.
+//
+// Note that if a item was changed multiple times it will be present multiple times in the result too.
 func (h *History) Items(opts ItemsOptions) ([]Item, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s/items", h.key), nil)
 

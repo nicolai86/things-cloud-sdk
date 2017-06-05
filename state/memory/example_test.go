@@ -1,13 +1,15 @@
-package thingscloud
+package memory
 
 import (
 	"fmt"
 	"log"
 	"os"
+
+	things "github.com/nicolai86/things-cloud-sdk"
 )
 
 func ExampleState_Update() {
-	client := New(APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
+	client := things.New(things.APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
 
 	histories, err := client.Histories()
 	if err != nil {
@@ -15,7 +17,7 @@ func ExampleState_Update() {
 	}
 	history := histories[0]
 
-	items, err := history.Items(ItemsOptions{})
+	items, err := history.Items(things.ItemsOptions{})
 	if err != nil {
 		log.Printf("Failed loading items: %q", err.Error())
 	}

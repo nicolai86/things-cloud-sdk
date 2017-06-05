@@ -151,6 +151,8 @@ type writeResponse struct {
 	CurrentItemIndex int `json:"current-item-index"`
 }
 
+// Identifiable abstracts different thingscloud write requests. As we need to provide a map
+// indexed by UUID, all we care about is the ID of the change, not the change itself
 type Identifiable interface {
 	UUID() string
 }

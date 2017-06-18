@@ -37,7 +37,7 @@ type ItemsOptions struct {
 //
 // Note that if a item was changed multiple times it will be present multiple times in the result too.
 func (h *History) Items(opts ItemsOptions) ([]Item, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s/items", h.key), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s/items", h.ID), nil)
 
 	values := req.URL.Query()
 	values.Set("start-index", strconv.Itoa(opts.StartIndex))
@@ -71,5 +71,6 @@ func (h *History) Items(opts ItemsOptions) ([]Item, error) {
 			items = append(items, item)
 		}
 	}
+	h.LatestServerIndex = v.CurrentItemIndex
 	return items, nil
 }

@@ -10,11 +10,10 @@ import (
 
 // History represents a synchronization stream. It's identified with a uuid v4
 type History struct {
+	ID                  string
 	Client              *Client
 	LatestServerIndex   int
 	LatestSchemaVersion int
-
-	key string
 }
 
 type historyResponse struct {
@@ -26,7 +25,7 @@ type historyResponse struct {
 
 // Sync ensures the history object is able to write to things
 func (h *History) Sync() error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s", h.key), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s", h.ID), nil)
 	if err != nil {
 		return err
 	}
@@ -79,7 +78,7 @@ func (c *Client) Histories() ([]*History, error) {
 	for i, key := range keys {
 		histories[i] = &History{
 			Client: c,
-			key:    key,
+			ID:     key,
 		}
 	}
 	return histories, nil
@@ -115,14 +114,14 @@ func (c *Client) CreateHistory() (*History, error) {
 	json.Unmarshal(bs, &v)
 	return &History{
 		Client: c,
-		key:    v.Key,
+		ID:     v.Key,
 	}, nil
 }
 
 // Delete destroys a history
 // Note that thingscloud will always return 202, even if the key is unknown
 func (h *History) Delete() error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("/account/%s/own-history-keys/%s", h.Client.EMail, h.key), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/account/%s/own-history-keys/%s", h.Client.EMail, h.ID), nil)
 	if err != nil {
 		return err
 	}
@@ -175,7 +174,7 @@ func (h *History) Write(items ...Identifiable) error {
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("/history/%s/items", h.key), bytes.NewReader(bs))
+	req, err := http.NewRequest("POST", fmt.Sprintf("/history/%s/items", h.ID), bytes.NewReader(bs))
 	if err != nil {
 		return err
 	}

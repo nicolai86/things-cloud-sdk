@@ -1,0 +1,59 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="./things-checklist-item.html">
+
+<dom-module id="things-task">
+  <template>
+    <input type="checkbox" checked$="[[completed]]" disabled /><span class="task-title" on-click="toggle">[[title]]</span>
+    <iron-collapse>
+      <span id="collapseDescription">[[description]]</span>
+    </iron-collapse>
+    <ul>
+      <template is="dom-repeat" items="[[checklist]]">
+        <li><things-checklist-item title="[[item.Title]]" status="[[item.Status]]" /></li>
+      </template>
+    </ul>
+  </template>
+
+  <script>
+    class ThingsTask extends Polymer.Element {
+      static get is() { return  'things-task' }
+
+      static get properties() {
+        return {
+          uuid: String,
+          title: String,
+          description: {
+            type: String,
+             observer: '_descriptionChanged'
+          },
+          checklist: Array,
+          status: Number,
+          completed: {
+            type: Boolean,
+            computed: 'isCompleted(status)'
+          }
+        };
+      }
+
+      _descriptionChanged(description) {
+        this.$.collapseDescription.innerHTML = description;
+      }
+
+      isCompleted(status) {
+        return status === 3;
+      }
+
+      toggle(evt) {
+        evt.currentTarget.nextSibling.nextSibling.toggle();
+      }
+
+      ready() {
+        super.ready();
+      }
+    }
+
+    window.customElements.define(ThingsTask.is, ThingsTask);
+  </script>
+</dom-module>
+

@@ -45,8 +45,8 @@ func TestClient_CreateHistory(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Expected request to succeed, but didn't: %q", err.Error())
 		}
-		if h.key != "33333abb-bfe4-4b03-a5c9-106d42220c72" {
-			t.Fatalf("Expected key %s but got %s", "33333abb-bfe4-4b03-a5c9-106d42220c72", h.key)
+		if h.ID != "33333abb-bfe4-4b03-a5c9-106d42220c72" {
+			t.Fatalf("Expected key %s but got %s", "33333abb-bfe4-4b03-a5c9-106d42220c72", h.ID)
 		}
 	})
 }
@@ -58,7 +58,7 @@ func TestHistory_Delete(t *testing.T) {
 		defer server.Close()
 
 		c := New(fmt.Sprintf("http://%s", server.Listener.Addr().String()), "martin@example.com", "")
-		h := History{Client: c, key: "33333abb-bfe4-4b03-a5c9-106d42220c72"}
+		h := History{Client: c, ID: "33333abb-bfe4-4b03-a5c9-106d42220c72"}
 		err := h.Delete()
 		if err != nil {
 			t.Fatalf("Expected request to succeed, but didn't: %q", err.Error())
@@ -73,7 +73,7 @@ func TestHistory_Sync(t *testing.T) {
 		defer server.Close()
 
 		c := New(fmt.Sprintf("http://%s", server.Listener.Addr().String()), "martin@example.com", "")
-		h := History{Client: c, key: "33333abb-bfe4-4b03-a5c9-106d42220c72"}
+		h := History{Client: c, ID: "33333abb-bfe4-4b03-a5c9-106d42220c72"}
 		err := h.Sync()
 		if err != nil {
 			t.Fatalf("Expected request to succeed, but didn't: %q", err.Error())

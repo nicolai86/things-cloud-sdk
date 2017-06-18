@@ -1,0 +1,35 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<dom-module id="things-checklist-item">
+  <template>
+    <input type="checkbox" checked$="[[completed]]" disabled /> [[title]]
+  </template>
+
+  <script>
+    class ThingsChecklistItem extends Polymer.Element {
+      static get is() { return  'things-checklist-item' }
+
+      static get properties() {
+        return {
+          title: String,
+          status: Number,
+          completed: {
+            type: Boolean,
+            computed: 'isCompleted(status)'
+          }
+        };
+      }
+
+      isCompleted(status) {
+        return status === 3;
+      }
+
+      ready() {
+        super.ready();
+      }
+    }
+
+    window.customElements.define(ThingsChecklistItem.is, ThingsChecklistItem);
+  </script>
+</dom-module>
+

@@ -1,0 +1,95 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="./things-task.html">
+
+<dom-module id="things-project">
+  <template>
+    <h2 on-click="toggle">[[title]]</h2>
+    <iron-collapse>
+      <span id="collapseDescription">[[description]]</span>
+    </iron-collapse>
+
+    <ul class="todo">
+      <template is="dom-repeat" items="[[todo]]">
+        <li>
+          <things-task title="[[item.Title]]" checklist="[[item.Checklist]]" status="[[item.Status]]" />
+        </li>
+      </template>
+    </ul>
+
+    <template is="dom-if" if="{{isNotEmpty(done)}}">
+      <button id="trigger" on-click="toggle" aria-expanded$="[[opened]]" aria-controls="collapse">[[getCollapseTitle(opened)]]</button>
+      <iron-collapse id="collapse" opened="{{opened}}">
+        <ul class="done">
+          <template is="dom-repeat" items="[[done]]">
+            <li>
+              <things-task title="[[item.Title]]" checklist="[[item.Checklist]]" status="[[item.Status]]" description="[[item.Note]]" />
+            </li>
+          </template>
+        </ul>
+      </iron-collapse>
+    </template>
+  </template>
+
+  <script>
+    class ThingsProject extends Polymer.Element {
+      static get is() { return  'things-project' }
+
+      static get properties() {
+        return {
+          title: String,
+          description: {
+            type: String,
+             observer: '_descriptionChanged'
+          },
+          subtasks: Array,
+          todo: {
+            type: Array,
+            computed: 'filterByStatus(subtasks, null, 3)'
+          },
+          done: {
+            type: Array,
+            computed: 'filterByStatus(subtasks, 3)'
+          },
+          //
+          opened: {
+            type: Boolean,
+            reflectToAttribute: true
+          }
+        };
+      }
+
+      _descriptionChanged(description) {
+        this.$.collapseDescription.innerHTML = description;
+      }
+
+      getCollapseTitle(opened) {
+        if (opened) {
+          return 'Hide logged';
+        }
+        return 'Show logged';
+      }
+
+      toggle(evt) {
+        evt.currentTarget.nextSibling.nextSibling.toggle();
+      }
+
+      isNotEmpty(tasks) {
+        return tasks.length > 0;
+      }
+
+      filterByStatus(tasks, desiredStatus, notDesiredStatus) {
+        const desired = desiredStatus != null ? (({ Status }) => Status == desiredStatus) : () => true
+        const notDesired = notDesiredStatus != null ? (({ Status }) => Status != notDesiredStatus) : () => true
+        return tasks.filter(desired).filter(notDesired);
+      }
+
+      ready() {
+        super.ready();
+      }
+    }
+
+    window.customElements.define(ThingsProject.is, ThingsProject);
+  </script>
+</dom-module>
+

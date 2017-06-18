@@ -1,0 +1,118 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="./things-task.html">
+<link rel="import" href="./things-project.html">
+
+<dom-module id="things-web-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+        margin: 0 auto;
+        width: 960px;
+      }
+    </style>
+    <h2 class="project-or-area">[[title]]</h2>
+    <template is="dom-if" if="{{isNotEmpty(projects)}}">
+      <h3>Projects</h3>
+      <ul class="projects">
+        <template is="dom-repeat" items="[[projects]]">
+          <li>
+            <things-project title="[[item.Title]]" subtasks="[[item.Subtasks]]" description="[[item.Note]]" />
+          </li>
+        </template>
+      </ul>
+    </template>
+    <template is="dom-if" if="{{isNotEmpty(tasks)}}">
+      <h3>Tasks</h3>
+      <ul class="tasks">
+        <template is="dom-repeat" items="[[tasks]]">
+          <li><things-task title="[[item.Title]]" checklist="[[item.Checklist]]" status="[[item.Status]]" /></li>
+        </template>
+      </ul>
+    </template>
+    <iron-ajax
+      auto
+      url="/api/v1/tasks"
+      params='{}'
+      handle-as="json"
+      on-response="handleResponse"
+      debounce-duration="300"></iron-ajax>
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class ThingsWebApp extends Polymer.Element {
+      static get is() { return 'things-web-app'; }
+      static get properties() {
+        return {
+          title: {
+            type: String
+          },
+          projects: {
+            type: Array
+          },
+          tasks: {
+            type: Array
+          }
+        };
+      }
+
+      toggle(evt) {
+        evt.target.nextSibling.nextSibling.toggle();
+      }
+
+      isNotEmpty(array) {
+        return array.length > 0;
+      }
+
+      // Array.prototype.stableSort = function(cmp) {
+      //   cmp = !!cmp ? cmp : (a, b) => {
+      //     if (a < b) return -1;
+      //     if (a > b) return 1;
+      //     return 0;
+      //   };
+      //   let stabilizedThis = this.map((el, index) => [el, index]);
+      //   let stableCmp = (a, b) => {
+      //     let order = cmp(a[0], b[0]);
+      //     if (order != 0) return order;
+      //     return a[1] - b[1];
+      //   }
+      //   stabilizedThis.sort(stableCmp);
+      //   for (let i=0; i<this.length; i++) {
+      //     this[i] = stabilizedThis[i][0];
+      //   }
+      //   return this;
+      // }
+
+      handleResponse(data) {
+        const taskComparator = (a, b) => {
+          if (a.Index < b.Index) return 1;
+          if (a.Index > b.Index) return -1;
+          return 0;
+        }
+        this.title = data.detail.response.title;
+        data.detail.response.tasks = data.detail.response.tasks.filter((task) => !task.InTrash);
+        data.detail.response.tasks.forEach((task) =>
+          task.Checklist = data.detail.response.checklistItems.filter((item) =>
+              item.TaskIDs.find((id) => id === task.UUID) != null
+            )
+          )
+        this.tasks = data.detail.response.tasks.filter((task) => !task.IsProject && task.ParentTaskIDs.length === 0);
+        this.projects = data.detail.response.tasks
+          .filter((task) => task.IsProject)
+        this.projects.forEach(
+          (project) =>
+            project.Subtasks = data.detail.response.tasks
+              .filter((task) => task.ParentTaskIDs.find((id) => id === project.UUID) != null)
+              .sort(taskComparator)
+        );
+      }
+    }
+
+    window.customElements.define(ThingsWebApp.is, ThingsWebApp);
+  </script>
+</dom-module>

@@ -161,6 +161,7 @@ type Task struct {
 	Index            int
 	AreaIDs          []string
 	ParentTaskIDs    []string
+	ActionGroupIDs   []string
 	InTrash          bool
 	Schedule         TaskSchedule
 	IsProject        bool
@@ -185,9 +186,9 @@ type TaskActionItemPayload struct {
 	InTrash           *bool         `json:"tr,omitempty"`
 	RecurrenceTaskIDs *[]string     `json:"rt,omitempty"`
 	Schedule          *TaskSchedule `json:"st,omitempty"`
+	ActionGroupIDs    *[]string     `json:"agr,omitempty"`
 	//  {
 	//      "acrd": null,
-	//      "agr": [],
 	//      "ar": [],
 	//      "ato": null,
 	//      "cd": 1495662927.014228,

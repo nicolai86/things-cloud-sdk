@@ -76,6 +76,10 @@ func (s *State) updateTask(item things.TaskActionItem) *things.Task {
 		ids := *item.P.AreaIDs
 		t.AreaIDs = ids
 	}
+	if item.P.ActionGroupIDs != nil {
+		ids := *item.P.ActionGroupIDs
+		t.ActionGroupIDs = ids
+	}
 	if item.P.ParentTaskIDs != nil {
 		ids := *item.P.ParentTaskIDs
 		t.ParentTaskIDs = ids

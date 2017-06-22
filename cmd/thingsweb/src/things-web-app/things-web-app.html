@@ -22,6 +22,17 @@
           </li>
         </template>
       </ul>
+
+      <template is="dom-if" if="{{isNotEmpty(doneProjects)}}">
+        <button id="trigger" on-click="toggle" aria-expanded$="[[opened]]" aria-controls="collapse">[[getCollapseTitle(opened)]]</button>
+        <iron-collapse id="collapse" opened="{{opened}}">
+          <ul class="done-projects">
+            <template is="dom-repeat" items="[[doneProjects]]">
+              <li><things-project title="[[item.Title]]" subtasks="[[item.Subtasks]]" description="[[item.Note]]" /></li>
+            </template>
+          </ul>
+        </iron-collapse>
+      </template>
     </template>
     <template is="dom-if" if="{{isNotEmpty(tasks)}}">
       <h3>Tasks</h3>
@@ -30,6 +41,16 @@
           <li><things-task title="[[item.Title]]" checklist="[[item.Checklist]]" status="[[item.Status]]" /></li>
         </template>
       </ul>
+      <template is="dom-if" if="{{isNotEmpty(doneTasks)}}">
+        <button id="trigger" on-click="toggle" aria-expanded$="[[opened]]" aria-controls="collapse">[[getCollapseTitle(opened)]]</button>
+        <iron-collapse id="collapse" opened="{{opened}}">
+          <ul class="done-tasks">
+            <template is="dom-repeat" items="[[doneTasks]]">
+              <li><things-task title="[[item.Title]]" checklist="[[item.Checklist]]" status="[[item.Status]]" /></li>
+            </template>
+          </ul>
+        </iron-collapse>
+      </template>
     </template>
     <iron-ajax
       auto
@@ -87,6 +108,13 @@
       //   }
       //   return this;
       // }
+      getCollapseTitle(open) {
+        if (open) {
+          return 'collapse';
+        } else {
+          return 'expand';
+        }
+      }
 
       handleResponse(data) {
         const taskComparator = (a, b) => {
@@ -101,15 +129,19 @@
               item.TaskIDs.find((id) => id === task.UUID) != null
             )
           )
-        this.tasks = data.detail.response.tasks.filter((task) => !task.IsProject && task.ParentTaskIDs.length === 0);
-        this.projects = data.detail.response.tasks
+        const tasks = data.detail.response.tasks.filter((task) => !task.IsProject && task.ParentTaskIDs.length === 0);
+        this.tasks = tasks.filter((task) => task.Status !== 3);
+        this.doneTasks = tasks.filter((task) => task.Status === 3);
+        const projects = data.detail.response.tasks
           .filter((task) => task.IsProject)
-        this.projects.forEach(
+        projects.forEach(
           (project) =>
             project.Subtasks = data.detail.response.tasks
               .filter((task) => task.ParentTaskIDs.find((id) => id === project.UUID) != null)
               .sort(taskComparator)
         );
+        this.projects = projects.filter((task) => task.Status !== 3);
+        this.doneProjects = projects.filter((task) => task.Status === 3);
       }
     }
 

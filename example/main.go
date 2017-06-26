@@ -42,6 +42,10 @@ func main() {
 	}
 	fmt.Printf("User: %s\n", c.EMail)
 
+	if err := c.SetAccountPassword(os.Getenv("THINGS_PASSWORD")); err != nil {
+		log.Fatalf("Failed to change the password: %v", err.Error())
+	}
+
 	if hs, err := c.Histories(); err != nil {
 		log.Fatalf("Failed to lookup histories: %q\n", err.Error())
 	} else {

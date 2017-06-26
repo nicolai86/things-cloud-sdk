@@ -44,29 +44,29 @@ func (c *Client) SignUp(email, password string) (*Client, error) {
 // SetAccountPassword allows you to change your account password.
 // Because things does not work with sessions you need to create a new client instance after
 // executing this method
-func (c *Client) SetAccountPassword(newPassword string) error {
+func (c *Client) SetAccountPassword(newPassword string) (*Client, error) {
 	data, err := json.Marshal(accountRequestBody{
 		Password: newPassword,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", c.EMail), bytes.NewBuffer(data))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp, err := c.do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusUnauthorized {
-			return ErrUnauthorized
+			return nil, ErrUnauthorized
 		}
-		return fmt.Errorf("http response code: %s", resp.Status)
+		return nil, fmt.Errorf("http response code: %s", resp.Status)
 	}
 
-	return nil
+	return New(c.Endpoint, c.EMail, newPassword), nil
 }

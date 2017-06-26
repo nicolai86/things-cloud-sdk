@@ -42,7 +42,7 @@ func main() {
 	}
 	fmt.Printf("User: %s\n", c.EMail)
 
-	if err := c.SetAccountPassword(os.Getenv("THINGS_PASSWORD")); err != nil {
+	if _, err := c.SetAccountPassword(os.Getenv("THINGS_PASSWORD")); err != nil {
 		log.Fatalf("Failed to change the password: %v", err.Error())
 	}
 

@@ -13,13 +13,16 @@ type accountRequestBody struct {
 	ConfirmationCode   string `json:"confirmation-code,omitempty"`
 }
 
-// DeleteAccount deletes your thingscloud account. This cannot be reversed
-func (c *Client) DeleteAccount() error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("/account/%s", c.EMail), nil)
+// AccountService allows account specific interaction with thingscloud
+type AccountService service
+
+// Delete deletes your current thingscloud account. This cannot be reversed
+func (s *AccountService) Delete() error {
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/account/%s", s.client.EMail), nil)
 	if err != nil {
 		return err
 	}
-	resp, err := c.do(req)
+	resp, err := s.client.do(req)
 	if err != nil {
 		return err
 	}
@@ -35,18 +38,18 @@ func (c *Client) DeleteAccount() error {
 }
 
 // Confirm finishes the account creation by providing the email token send by thingscloud
-func (c *Client) Confirm(code string) error {
+func (s *AccountService) Confirm(code string) error {
 	data, err := json.Marshal(accountRequestBody{
 		ConfirmationCode: code,
 	})
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", c.EMail), bytes.NewBuffer(data))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", s.client.EMail), bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
-	resp, err := c.do(req)
+	resp, err := s.client.do(req)
 	if err != nil {
 		return err
 	}
@@ -62,7 +65,7 @@ func (c *Client) Confirm(code string) error {
 }
 
 // SignUp creates a new thingscloud account and returns a configured client
-func (c *Client) SignUp(email, password string) (*Client, error) {
+func (s *AccountService) SignUp(email, password string) (*Client, error) {
 	data, err := json.Marshal(accountRequestBody{
 		Password:           password,
 		SLAVersionAccepted: "https://thingscloud.appspot.com/sla/v5.html",
@@ -74,7 +77,7 @@ func (c *Client) SignUp(email, password string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.do(req)
+	resp, err := s.client.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -84,24 +87,24 @@ func (c *Client) SignUp(email, password string) (*Client, error) {
 		return nil, fmt.Errorf("http response code: %s", resp.Status)
 	}
 
-	return New(c.Endpoint, email, password), nil
+	return New(s.client.Endpoint, email, password), nil
 }
 
-// SetAccountPassword allows you to change your account password.
+// ChangePassword allows you to change your account password.
 // Because things does not work with sessions you need to create a new client instance after
 // executing this method
-func (c *Client) SetAccountPassword(newPassword string) (*Client, error) {
+func (s *AccountService) ChangePassword(newPassword string) (*Client, error) {
 	data, err := json.Marshal(accountRequestBody{
 		Password: newPassword,
 	})
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", c.EMail), bytes.NewBuffer(data))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", s.client.EMail), bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.do(req)
+	resp, err := s.client.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -114,5 +117,5 @@ func (c *Client) SetAccountPassword(newPassword string) (*Client, error) {
 		return nil, fmt.Errorf("http response code: %s", resp.Status)
 	}
 
-	return New(c.Endpoint, c.EMail, newPassword), nil
+	return New(s.client.Endpoint, s.client.EMail, newPassword), nil
 }

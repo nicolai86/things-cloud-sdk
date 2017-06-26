@@ -25,17 +25,27 @@ type Client struct {
 	password string
 
 	client *http.Client
+	common service
+
+	Accounts *AccountService
+}
+
+type service struct {
+	client *Client
 }
 
 // New initializes a things client
 func New(endpoint, email, password string) *Client {
-	return &Client{
+	c := &Client{
 		Endpoint: endpoint,
 		EMail:    email,
 		password: password,
 
 		client: &http.Client{},
 	}
+	c.common.client = c
+	c.Accounts = (*AccountService)(&c.common)
+	return c
 }
 
 // ThingsUserAgent is the http user-agent header set by things for mac Version 3.0.3 (30003505)

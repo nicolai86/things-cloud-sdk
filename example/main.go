@@ -36,7 +36,7 @@ func stringVal(s string) *string {
 func main() {
 	if os.Getenv("THINGS_SIGNUP") != "" {
 		c := thingscloud.New(thingscloud.APIEndpoint, "", "")
-		if _, err := c.SignUp(os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD")); err != nil {
+		if _, err := c.Accounts.SignUp(os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD")); err != nil {
 			log.Fatalf("Signup failed: %v", err.Error())
 		}
 		log.Printf("signup succeeded")
@@ -46,7 +46,7 @@ func main() {
 	c := thingscloud.New(thingscloud.APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
 
 	if os.Getenv("THINGS_CONFIRMATION_CODE") != "" {
-		if err := c.Confirm(os.Getenv("THINGS_CONFIRMATION_CODE")); err != nil {
+		if err := c.Accounts.Confirm(os.Getenv("THINGS_CONFIRMATION_CODE")); err != nil {
 			log.Fatalf("Confirmation failed: %v", err.Error())
 		}
 		log.Printf("confirmation succeeded")
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	if os.Getenv("THINGS_DELETE") != "" {
-		if err := c.DeleteAccount(); err != nil {
+		if err := c.Accounts.Delete(); err != nil {
 			log.Fatalf("Deletion failed: %v", err.Error())
 		}
 		log.Printf("deletion succeeded")
@@ -67,7 +67,7 @@ func main() {
 	}
 	fmt.Printf("User: %s\n", c.EMail)
 
-	if _, err := c.SetAccountPassword(os.Getenv("THINGS_PASSWORD")); err != nil {
+	if _, err := c.Accounts.ChangePassword(os.Getenv("THINGS_PASSWORD")); err != nil {
 		log.Fatalf("Failed to change the password: %v", err.Error())
 	}
 

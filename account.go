@@ -13,6 +13,7 @@ type accountRequestBody struct {
 	ConfirmationCode   string `json:"confirmation-code,omitempty"`
 }
 
+// DeleteAccount deletes your thingscloud account. This cannot be reversed
 func (c *Client) DeleteAccount() error {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("/account/%s", c.EMail), nil)
 	if err != nil {

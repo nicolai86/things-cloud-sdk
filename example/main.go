@@ -34,7 +34,32 @@ func stringVal(s string) *string {
 }
 
 func main() {
+	if os.Getenv("THINGS_SIGNUP") != "" {
+		c := thingscloud.New(thingscloud.APIEndpoint, "", "")
+		if _, err := c.SignUp(os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD")); err != nil {
+			log.Fatalf("Signup failed: %v", err.Error())
+		}
+		log.Printf("signup succeeded")
+		return
+	}
+
 	c := thingscloud.New(thingscloud.APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
+
+	if os.Getenv("THINGS_CONFIRMATION_CODE") != "" {
+		if err := c.Confirm(os.Getenv("THINGS_CONFIRMATION_CODE")); err != nil {
+			log.Fatalf("Confirmation failed: %v", err.Error())
+		}
+		log.Printf("confirmation succeeded")
+		return
+	}
+
+	if os.Getenv("THINGS_DELETE") != "" {
+		if err := c.DeleteAccount(); err != nil {
+			log.Fatalf("Deletion failed: %v", err.Error())
+		}
+		log.Printf("deletion succeeded")
+		return
+	}
 
 	_, err := c.Verify()
 	if err != nil {
@@ -143,16 +168,4 @@ Tags:           %d
 			}
 		}
 	}
-
-	// if h, err := c.CreateHistory(); err != nil {
-	// 	log.Fatalf("Failed to create history: %q\n", err.Error())
-	// } else {
-	// 	fmt.Printf("Created new history…\n")
-
-	// 	if err := h.Delete(); err != nil {
-	// 		log.Fatalf("Failed to delete history: %q\n", err.Error())
-	// 	} else {
-	// 		fmt.Printf("Deleted new history…\n")
-	// 	}
-	// }
 }

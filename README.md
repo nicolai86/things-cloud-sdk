@@ -27,6 +27,8 @@ can enhance your Things experience on iOS and Mac.
       - [x] end on date
       - [x] end after n times
       - [ ] repeat after completion
+      - [ ] reminders
+      - [ ] deadlines
   - [x] State aggregation
     - [x] InMemory
     - [ ] Persistent

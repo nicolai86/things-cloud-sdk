@@ -1,0 +1,7 @@
+{
+  "name": "things-web",
+  "short_name": "things-web",
+  "description": "web ui for things web",
+  "start_url": "/",
+  "display": "standalone"
+}

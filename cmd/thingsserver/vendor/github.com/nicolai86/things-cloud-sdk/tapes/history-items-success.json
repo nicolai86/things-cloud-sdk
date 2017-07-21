@@ -1,0 +1,111 @@
+{
+  "items": [
+    {
+      "4D83724E-19B3-41F7-8EF9-287019A05CB7": {
+        "p": {
+          "ix": 0,
+          "tt": "An Area",
+          "tg": []
+        },
+        "e": "Area2",
+        "t": 0
+      }
+    },
+    {
+      "AD55F048-9A28-4260-A07B-6BA5C0D39AC9": {
+        "p": {
+          "ix": 0,
+          "cd": 1378062649.570914,
+          "icsd": null,
+          "ar": [],
+          "tir": 1377993600,
+          "rt": [],
+          "rr": null,
+          "icc": 0,
+          "tt": "A task",
+          "tr": false,
+          "tp": 0,
+          "acrd": null,
+          "ti": -11332,
+          "tg": [
+            "CC-Things-Tag-High"
+          ],
+          "icp": false,
+          "nt": null,
+          "do": 0,
+          "dl": [],
+          "lai": null,
+          "dd": null,
+          "pr": [],
+          "md": 1378126072.4035621,
+          "ss": 3,
+          "sr": 1377993600,
+          "sp": 1378126072.3603289,
+          "st": 1,
+          "dds": null,
+          "ato": null,
+          "sb": 0,
+          "agr": []
+        },
+        "e": "Task3",
+        "t": 0
+      }
+    },
+    {
+      "CC-Things-Tag-High": {
+        "p": {
+          "ix": 0,
+          "tt": "High",
+          "sh": "1",
+          "pn": [
+            "CC-Things-Tag-Priority"
+          ]
+        },
+        "e": "Tag3",
+        "t": 0
+      }
+    },
+    {
+      "12984C5D-F287-4DDE-AE80-8E05C87B441E": {
+        "p": {
+          "md": 1495650765.7039521,
+          "ix": -269,
+          "ss": 0,
+          "tt": "A TODO",
+          "sp": null,
+          "ts": [
+            "AD55F048-9A28-4260-A07B-6BA5C0D39AC9"
+          ],
+          "cd": 1495650741.29338
+        },
+        "e": "ChecklistItem",
+        "t": 0
+      },
+      "Settings": {
+        "p": {
+          "ld": 1416697200,
+          "grpt": false,
+          "li": 0
+        },
+        "e": "Settings3",
+        "t": 0
+      }
+    },
+    {
+      "12984C5D-F287-4DDE-AE80-8E05C87B441E": {
+        "p": {
+          "ss": 3,
+          "md": 1495911948.8616159,
+          "sp": 1495911948.8604441
+        },
+        "e": "ChecklistItem",
+        "t": 1
+      }
+    }
+  ],
+  "current-item-index": 1,
+  "schema": 300,
+  "start-total-content-size": 0,
+  "end-total-content-size": 100570,
+  "latest-total-content-size": 100570
+}

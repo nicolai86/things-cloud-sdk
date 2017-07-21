@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>things-web-app test</title>
+
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="../../src/things-web-app/things-web-app.html">
+  </head>
+  <body>
+
+    <test-fixture id="BasicTestFixture">
+      <template>
+        <things-web-app></things-web-app>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('things-web-app', function() {
+        var request;
+        var server;
+        var responseHeaders = {
+          json: { 'Content-Type': 'application/json' },
+        };
+
+        var emptyResponse = {
+          title: "Fake Area",
+          tasks: [],
+          checklistItems: [],
+        };
+        var tasksResponse = {
+          title: "Fake Area",
+          tasks: [{
+            UUID:"528E8FED-A7F1-4F8B-8797-8F5562FF0255",
+            Status:0,
+            Title:"Cleanup",
+            Note:"the house",
+            TaskIDs: [],
+            InTrash: false,
+            IsProject:false,
+            ParentTaskIDs: [],
+          }],
+          checklistItems: [],
+        };
+        var projectsResponse = {
+          title: "Fake Area",
+          tasks: [{
+            UUID:"528E8FED-A7F1-4F8B-8797-8F5562FF0255",
+            Status:0,
+            Title:"Learn Chinese",
+            Note:"",
+            TaskIDs: [],
+            InTrash: false,
+            IsProject: true,
+            ParentTaskIDs: [],
+          }],
+          checklistItems: [],
+        };
+
+        setup(function() {
+          server = sinon.fakeServer.create();
+        });
+
+        teardown(function() {
+          server.restore();
+        });
+
+        function afterLoad(response, cb) {
+          server.respondWith('GET', /\/api\/v1\/tasks/, [200, responseHeaders.json, JSON.stringify(response)]);
+
+          var element = fixture('BasicTestFixture');
+          var ajax = Polymer.dom(element.root).querySelector("iron-ajax");
+
+          ajax.addEventListener('request', function (e) {
+            server.respond();
+          });
+
+          ajax.addEventListener('response', function (e) {
+            cb(element);
+          });
+        }
+
+        test('instantiating the element with default properties works', function(done) {
+          afterLoad(emptyResponse, function(element) {
+            var elementShadowRoot = element.shadowRoot;
+            var elementHeader = elementShadowRoot.querySelector('.project-or-area');
+            assert.equal(elementHeader.innerHTML, 'Fake Area');
+            assert.isNull(elementShadowRoot.querySelector('.projects'));
+            assert.isNull(elementShadowRoot.querySelector('.tasks'));
+            done();
+          });
+        });
+
+        test('shows tasks if necessary', function(done) {
+          afterLoad(tasksResponse, function(element) {
+            flush(function() {
+              assert.isNotNull(Polymer.dom(element.root).querySelector('.tasks'));
+              done();
+            });
+          });
+        })
+
+        test('shows projects if necessary', function(done) {
+          afterLoad(projectsResponse, function(element) {
+            flush(function() {
+              assert.isNotNull(Polymer.dom(element.root).querySelector('.projects'));
+              done();
+            });
+          });
+        })
+      });
+    </script>
+
+  </body>
+</html>

@@ -21,8 +21,14 @@ can enhance your Things experience on iOS and Mac.
   - [x] Sync History
   - [ ] Item Management
     - [x] read items 
-    - [ ] recurring tasks
     - [x] write items
+    - recurring tasks
+      - [x] neverending
+      - [x] end on date
+      - [x] end after n times
+      - [ ] repeat after completion
+      - [ ] reminders
+      - [ ] deadlines
   - [x] State aggregation
     - [x] InMemory
     - [ ] Persistent

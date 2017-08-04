@@ -120,7 +120,7 @@ func (n *node) InsertRoute(method methodTyp, pattern string, handler http.Handle
 
 		// We're going to be searching for a wild node next,
 		// in this case, we need to get the tail
-		var label byte = search[0]
+		var label = search[0]
 		var segTail byte
 		var segEndIdx int
 		var segTyp nodeTyp
@@ -353,12 +353,9 @@ func (n *node) FindRoute(rctx *Context, method methodTyp, path string) endpoints
 		return nil
 	}
 
-	rp := RouteParams{}
-	rp.Keys = append(rp.Keys, rctx.routeParams.Keys...)
-	rp.Values = append(rp.Values, rctx.routeParams.Values...)
-
 	// Record the routing params in the request lifecycle
-	rctx.URLParams = append(rctx.URLParams, rp)
+	rctx.URLParams.Keys = append(rctx.URLParams.Keys, rctx.routeParams.Keys...)
+	rctx.URLParams.Values = append(rctx.URLParams.Values, rctx.routeParams.Values...)
 
 	// Record the routing pattern in the request lifecycle
 	if rn.endpoints[method].pattern != "" {
@@ -450,11 +447,11 @@ func (n *node) findRoute(rctx *Context, method methodTyp, path string) *node {
 				if h != nil && h.handler != nil {
 					rctx.routeParams.Keys = append(rctx.routeParams.Keys, h.paramKeys...)
 					return xn
-				} else {
-					// flag that the routing context found a route, but not a corresponding
-					// supported method
-					rctx.methodNotAllowed = true
 				}
+
+				// flag that the routing context found a route, but not a corresponding
+				// supported method
+				rctx.methodNotAllowed = true
 			}
 		}
 
@@ -652,7 +649,7 @@ func patNextSegment(pattern string) (nodeTyp, string, string, byte, int, int) {
 		}
 
 		key := pattern[ps+1 : pe]
-		pe += 1 // set end to next position
+		pe++ // set end to next position
 
 		if pe < len(pattern) {
 			tail = pattern[pe]
@@ -666,13 +663,11 @@ func patNextSegment(pattern string) (nodeTyp, string, string, byte, int, int) {
 		}
 
 		return nt, key, rexpat, tail, ps, pe
-	} else {
-		// Wildcard pattern is next
-
-		// TODO: should we panic if there is stuff after the * ???
-
-		return ntCatchAll, "*", "", 0, ws, len(pattern)
 	}
+
+	// Wildcard pattern as finale
+	// TODO: should we panic if there is stuff after the * ???
+	return ntCatchAll, "*", "", 0, ws, len(pattern)
 }
 
 func patParamKeys(pattern string) []string {
@@ -691,7 +686,6 @@ func patParamKeys(pattern string) []string {
 		paramKeys = append(paramKeys, paramKey)
 		pat = pat[e:]
 	}
-	return paramKeys
 }
 
 // longestPrefix finds the length of the shared prefix
@@ -758,8 +752,53 @@ func (ns nodes) findEdge(label byte) *node {
 	return ns[idx]
 }
 
+// Route describes the details of a routing handler.
 type Route struct {
 	Pattern   string
 	Handlers  map[string]http.Handler
 	SubRoutes Routes
+}
+
+// WalkFunc is the type of the function called for each method and route visited by Walk.
+type WalkFunc func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error
+
+// Walk walks any router tree that implements Routes interface.
+func Walk(r Routes, walkFn WalkFunc) error {
+	return walk(r, walkFn, "")
+}
+
+func walk(r Routes, walkFn WalkFunc, parentRoute string, parentMw ...func(http.Handler) http.Handler) error {
+	for _, route := range r.Routes() {
+		mws := make([]func(http.Handler) http.Handler, len(parentMw))
+		copy(mws, parentMw)
+		mws = append(mws, r.Middlewares()...)
+
+		if route.SubRoutes != nil {
+			if err := walk(route.SubRoutes, walkFn, parentRoute+route.Pattern, mws...); err != nil {
+				return err
+			}
+			continue
+		}
+
+		for method, handler := range route.Handlers {
+			if method == "*" {
+				// Ignore a "catchAll" method, since we pass down all the specific methods for each route.
+				continue
+			}
+
+			fullRoute := parentRoute + route.Pattern
+
+			if chain, ok := handler.(*ChainHandler); ok {
+				if err := walkFn(method, fullRoute, chain.Endpoint, append(mws, chain.Middlewares...)...); err != nil {
+					return err
+				}
+			} else {
+				if err := walkFn(method, fullRoute, handler, mws...); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }

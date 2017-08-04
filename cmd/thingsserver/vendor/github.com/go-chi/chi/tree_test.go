@@ -392,7 +392,7 @@ func stringSliceEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	for i, _ := range a {
+	for i := range a {
 		if b[i] != a[i] {
 			return false
 		}
@@ -414,11 +414,26 @@ func BenchmarkTreeGet(b *testing.B) {
 	tr.InsertRoute(mGET, "/pinggggg", h2)
 	tr.InsertRoute(mGET, "/hello", h1)
 
+	mctx := NewRouteContext()
+
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		mctx := NewRouteContext()
+		mctx.reset()
 		tr.FindRoute(mctx, mGET, "/ping/123/456")
+	}
+}
+
+func TestWalker(t *testing.T) {
+	r := bigMux()
+
+	// Walk the muxBig router tree.
+	if err := Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		t.Logf("%v %v", method, route)
+
+		return nil
+	}); err != nil {
+		t.Error(err)
 	}
 }

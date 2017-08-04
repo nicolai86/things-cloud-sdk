@@ -48,8 +48,8 @@ func New(endpoint, email, password string) *Client {
 	return c
 }
 
-// ThingsUserAgent is the http user-agent header set by things for mac Version 3.0.3 (30003505)
-const ThingsUserAgent = "ThingsMac/30003505mas"
+// ThingsUserAgent is the http user-agent header set by things for mac Version 3.1.0 (30100506)
+const ThingsUserAgent = "ThingsMac/30100506mas"
 
 func (c *Client) do(req *http.Request) (*http.Response, error) {
 	uri := fmt.Sprintf("%s%s", c.Endpoint, req.URL)

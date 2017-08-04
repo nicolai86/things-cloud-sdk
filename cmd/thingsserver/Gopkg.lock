@@ -4,18 +4,24 @@
 [[projects]]
   name = "github.com/go-chi/chi"
   packages = ["."]
-  revision = "12a98d329f12aac9e94b72c713437350c948a5e2"
-  version = "v3.1.1"
+  revision = "25354a53cca531cb2efd3f1d3c565d90ff04d802"
+  version = "v3.1.5"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/google/go-cmp"
+  packages = ["cmp","cmp/internal/diff","cmp/internal/function","cmp/internal/value"]
+  revision = "8099a9787ce5dc5984ed879a3bda47dc730a8e97"
 
 [[projects]]
   name = "github.com/nicolai86/things-cloud-sdk"
   packages = ["."]
-  revision = "ec8e42c0f1be7d82cc65bfa32d5751d95c645f55"
-  version = "v0.1.0"
+  revision = "4da5f38b1e2eab36faf06bf1effd0b04968078fb"
+  version = "v0.1.2"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1f002d2c4ee7c270f8f1875b5b645ad01917d308a9077e421509c6da0000305e"
+  inputs-digest = "93d487b3ac5523a054c0879c614596253c0c09b8359e886714c5f58cbe603372"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -50,6 +50,40 @@ func (h *History) Sync() error {
 	return nil
 }
 
+// History requests a specific history
+func (c *Client) History(id string) (*History, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusUnauthorized {
+			return nil, ErrUnauthorized
+		}
+		return nil, fmt.Errorf("http response code: %s", resp.Status)
+	}
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	h := historyResponse{}
+	if err := json.Unmarshal(bs, &h); err != nil {
+		return nil, err
+	}
+
+	return &History{
+		Client:              c,
+		ID:                  id,
+		LatestServerIndex:   h.LatestServerIndex,
+		LatestSchemaVersion: h.LatestSchemaVersion,
+	}, nil
+}
+
 // Histories requests all known history keys
 func (c *Client) Histories() ([]*History, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/account/%s/own-history-keys", c.EMail), nil)
@@ -170,7 +204,6 @@ func (h *History) Write(items ...Identifiable) error {
 		v.Items = append(v.Items, m)
 	}
 	bs, err := json.Marshal(v)
-	fmt.Printf("\n\n%s\n\n", string(bs))
 	if err != nil {
 		return err
 	}

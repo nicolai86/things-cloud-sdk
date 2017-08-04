@@ -170,23 +170,24 @@ type Task struct {
 // TaskActionItemPayload describes the payload for modifying Tasks, and also Projects,
 // as projects are special kind of Tasks
 type TaskActionItemPayload struct {
-	Index             *int          `json:"ix,omitempty"`
-	CreationDate      *Timestamp    `json:"cd,omitempty"`
-	ModificationDate  *Timestamp    `json:"md,omitempty"` // ok
-	ScheduledDate     *Timestamp    `json:"sr,omitempty"`
-	CompletionDate    *Timestamp    `json:"sp,omitempty"`
-	DeadlineDate      *Timestamp    `json:"dd,omitempty"` //
-	Status            *TaskStatus   `json:"ss,omitempty"`
-	IsProject         *Boolean      `json:"tp,omitempty"`
-	Title             *string       `json:"tt,omitempty"`
-	Note              *string       `json:"nt,omitempty"`
-	AreaIDs           *[]string     `json:"ar,omitempty"`
-	ParentTaskIDs     *[]string     `json:"pr,omitempty"`
-	TagIDs            []string      `json:"tg,omitempty"`
-	InTrash           *bool         `json:"tr,omitempty"`
-	RecurrenceTaskIDs *[]string     `json:"rt,omitempty"`
-	Schedule          *TaskSchedule `json:"st,omitempty"`
-	ActionGroupIDs    *[]string     `json:"agr,omitempty"`
+	Index             *int                   `json:"ix,omitempty"`
+	CreationDate      *Timestamp             `json:"cd,omitempty"`
+	ModificationDate  *Timestamp             `json:"md,omitempty"` // ok
+	ScheduledDate     *Timestamp             `json:"sr,omitempty"`
+	CompletionDate    *Timestamp             `json:"sp,omitempty"`
+	DeadlineDate      *Timestamp             `json:"dd,omitempty"` //
+	Status            *TaskStatus            `json:"ss,omitempty"`
+	IsProject         *Boolean               `json:"tp,omitempty"`
+	Title             *string                `json:"tt,omitempty"`
+	Note              *string                `json:"nt,omitempty"`
+	AreaIDs           *[]string              `json:"ar,omitempty"`
+	ParentTaskIDs     *[]string              `json:"pr,omitempty"`
+	TagIDs            []string               `json:"tg,omitempty"`
+	InTrash           *bool                  `json:"tr,omitempty"`
+	RecurrenceTaskIDs *[]string              `json:"rt,omitempty"`
+	Schedule          *TaskSchedule          `json:"st,omitempty"`
+	ActionGroupIDs    *[]string              `json:"agr,omitempty"`
+	Repeater          *RepeaterConfiguration `json:"rr,omitempty"`
 	//  {
 	//      "acrd": null,
 	//      "ar": [],
@@ -218,21 +219,6 @@ type TaskActionItemPayload struct {
 	//      "tr": false,
 	//      "tt": "test"
 	//  },
-	// "rr": {
-	//   "fu": 16,
-	//   "sr": 1495670400,
-	//   "of": [
-	//     {
-	//       "dy": 0
-	//     }
-	//   ],
-	//   "ts": -3,
-	//   "tp": 0,
-	//   "fa": 1,
-	//   "rc": 2,
-	//   "ia": 1495929600,
-	//   "rrv": 4
-	// },
 }
 
 // TaskActionItem describes an event on a Task

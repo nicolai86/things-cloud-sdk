@@ -204,7 +204,6 @@ func (h *History) Write(items ...Identifiable) error {
 		v.Items = append(v.Items, m)
 	}
 	bs, err := json.Marshal(v)
-	fmt.Printf("\n\n%s\n\n", string(bs))
 	if err != nil {
 		return err
 	}

@@ -17,10 +17,11 @@ build:
     - script:
         name: go test
         code: |
-          go test ./...
+          go test .
+          go test ./cmd/thingsweb
 
     - script:
         name: golint
         code: |
           go get github.com/golang/lint/golint
-          golint -set_exit_status ./...
+          golint -set_exit_status .

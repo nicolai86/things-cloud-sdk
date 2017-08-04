@@ -50,7 +50,7 @@ func (h *History) Sync() error {
 	return nil
 }
 
-// Histories requests a specific history
+// History requests a specific history
 func (c *Client) History(id string) (*History, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s", id), nil)
 	if err != nil {

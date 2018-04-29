@@ -14,7 +14,7 @@ func ExampleHistory_Items() {
 	}
 	history := histories[0]
 
-	items, err := history.Items(ItemsOptions{})
+	items, _, err := history.Items(ItemsOptions{})
 	if err != nil {
 		log.Printf("Failed loading items: %q", err.Error())
 	}

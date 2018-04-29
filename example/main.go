@@ -92,17 +92,17 @@ func main() {
 					UUID:   "54152210-ABFA-4F9F-81AC-7F50FBDEDC2G",
 				},
 				P: thingscloud.TaskActionItemPayload{
-				// Title: stringVal("test 5"),
-				// Schedule:     &anytime,
-				// Status:       &pending,
-				// CreationDate: &thingscloud.Timestamp{},
-				// IsProject:    &yes,
+					// Title: stringVal("test 5"),
+					// Schedule:     &anytime,
+					// Status:       &pending,
+					// CreationDate: &thingscloud.Timestamp{},
+					// IsProject:    &yes,
 				},
 			}); err != nil {
 				log.Fatalf("Write failed: %q\n", err.Error())
 			}
 
-			items, err := history.Items(thingscloud.ItemsOptions{StartIndex: 0})
+			items, _, err := history.Items(thingscloud.ItemsOptions{StartIndex: 0})
 			if err != nil {
 				log.Fatalf("Failed to lookup items: %q\n", err.Error())
 			}

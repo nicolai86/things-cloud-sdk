@@ -16,7 +16,7 @@ func TestHistory_Items(t *testing.T) {
 			Client: c,
 			ID:     "33333abb-bfe4-4b03-a5c9-106d42220c72",
 		}
-		items, err := h.Items(ItemsOptions{})
+		items, _, err := h.Items(ItemsOptions{})
 		if err != nil {
 			t.Fatalf("Expected items request to succeed, but didn't: %q", err.Error())
 		}

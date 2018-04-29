@@ -21,7 +21,7 @@ func TestBoolean_UnmarshalJSON(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 		if bool(b) != testCase.Expected {
-			t.Fatalf("Expected %q but got %q", testCase.Expected, b)
+			t.Fatalf("Expected %t but got %t", testCase.Expected, b)
 		}
 	}
 }

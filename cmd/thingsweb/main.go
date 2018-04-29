@@ -150,7 +150,7 @@ func main() {
 	}
 	s.History.Client = c
 	fmt.Printf("using history %q since %d\n", s.History.ID, s.History.LatestServerIndex)
-	items, err := s.History.Items(thingscloud.ItemsOptions{StartIndex: s.History.LatestServerIndex})
+	items, _, err := s.History.Items(thingscloud.ItemsOptions{StartIndex: s.History.LatestServerIndex})
 	if err != nil {
 		log.Fatalf("Failed to lookup items: %q\n", err.Error())
 	}

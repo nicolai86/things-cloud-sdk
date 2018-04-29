@@ -36,7 +36,7 @@ type ItemsOptions struct {
 // The Items method unwraps these objects and returns a list instead.
 //
 // Note that if a item was changed multiple times it will be present multiple times in the result too.
-func (h *History) Items(opts ItemsOptions) ([]Item, error) {
+func (h *History) Items(opts ItemsOptions) ([]Item, bool, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s/items", h.ID), nil)
 
 	values := req.URL.Query()
@@ -44,25 +44,25 @@ func (h *History) Items(opts ItemsOptions) ([]Item, error) {
 	req.URL.RawQuery = values.Encode()
 
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	resp, err := h.Client.do(req)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http response code: %s", resp.Status)
+		return nil, false, fmt.Errorf("http response code: %s", resp.Status)
 	}
 
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	var v itemsResponse
 	if err := json.Unmarshal(bs, &v); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	var items = []Item{}
 	for _, m := range v.Items {
@@ -72,5 +72,8 @@ func (h *History) Items(opts ItemsOptions) ([]Item, error) {
 		}
 	}
 	h.LatestServerIndex = v.CurrentItemIndex
-	return items, nil
+	h.EndTotalContentSize = v.EndTotalContentSize
+	h.LatestTotalContentSize = v.LatestTotalContentSize
+	hasMoreItems := h.EndTotalContentSize < h.LatestTotalContentSize
+	return items, hasMoreItems, nil
 }

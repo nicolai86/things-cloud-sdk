@@ -71,9 +71,10 @@ func (h *History) Items(opts ItemsOptions) ([]Item, bool, error) {
 			items = append(items, item)
 		}
 	}
+	h.LoadedServerIndex = h.LoadedServerIndex + len(v.Items)
 	h.LatestServerIndex = v.CurrentItemIndex
 	h.EndTotalContentSize = v.EndTotalContentSize
 	h.LatestTotalContentSize = v.LatestTotalContentSize
-	hasMoreItems := h.EndTotalContentSize < h.LatestTotalContentSize
+	hasMoreItems := h.LoadedServerIndex < h.LatestServerIndex
 	return items, hasMoreItems, nil
 }

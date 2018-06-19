@@ -13,6 +13,7 @@ type History struct {
 	ID                     string
 	Client                 *Client
 	LatestServerIndex      int
+	LoadedServerIndex      int
 	LatestSchemaVersion    int
 	EndTotalContentSize    int
 	LatestTotalContentSize int

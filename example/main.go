@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/google/uuid"
 	thingscloud "github.com/nicolai86/things-cloud-sdk"
 	memory "github.com/nicolai86/things-cloud-sdk/state/memory"
 )
@@ -67,105 +68,119 @@ func main() {
 	}
 	fmt.Printf("User: %s\n", c.EMail)
 
-	if _, err := c.Accounts.ChangePassword(os.Getenv("THINGS_PASSWORD")); err != nil {
-		log.Fatalf("Failed to change the password: %v", err.Error())
+	// if you change the password the Things 3 app will prompt a re-sync.
+	if os.Getenv("NEW_THINGS_PASSWORD") != "" {
+		if _, err := c.Accounts.ChangePassword(os.Getenv("NEW_THINGS_PASSWORD")); err != nil {
+			log.Fatalf("Failed to change the password: %v", err.Error())
+		}
 	}
 
-	if hs, err := c.Histories(); err != nil {
-		log.Fatalf("Failed to lookup histories: %q\n", err.Error())
-	} else {
-		fmt.Printf("Histories: %d\n", len(hs))
+	history, err := c.OwnHistory()
+	if err != nil {
+		log.Fatalf("Failed to lookup own history key: %q\n", err.Error())
+	}
+	fmt.Printf("Own History Key: %s\n", history.ID)
 
-		if len(hs) > 0 {
-			history := hs[0]
-			history.Sync()
+	history.Sync()
 
-			state := memory.NewState()
+	state := memory.NewState()
 
-			// pending := thingscloud.TaskStatusPending
-			// anytime := thingscloud.TaskScheduleAnytime
-			// yes := thingscloud.Boolean(true)
-			if err := history.Write(thingscloud.TaskActionItem{
-				Item: thingscloud.Item{
-					Kind:   thingscloud.ItemKindTask,
-					Action: thingscloud.ItemActionDeleted,
-					UUID:   "54152210-ABFA-4F9F-81AC-7F50FBDEDC2G",
-				},
-				P: thingscloud.TaskActionItemPayload{
-					// Title: stringVal("test 5"),
-					// Schedule:     &anytime,
-					// Status:       &pending,
-					// CreationDate: &thingscloud.Timestamp{},
-					// IsProject:    &yes,
-				},
-			}); err != nil {
-				log.Fatalf("Write failed: %q\n", err.Error())
-			}
+	pending := thingscloud.TaskStatusPending
+	anytime := thingscloud.TaskScheduleAnytime
+	yes := thingscloud.Boolean(true)
+	taskUUID := uuid.New().String()
+	log.Printf("Creating task %s\n", taskUUID)
+	if err := history.Write(thingscloud.TaskActionItem{
+		Item: thingscloud.Item{
+			Kind:   thingscloud.ItemKindTask,
+			Action: thingscloud.ItemActionCreated,
+			UUID:   taskUUID,
+		},
+		P: thingscloud.TaskActionItemPayload{
+			Title:        stringVal("test project"),
+			Schedule:     &anytime,
+			Status:       &pending,
+			CreationDate: &thingscloud.Timestamp{},
+			IsProject:    &yes,
+		},
+	}); err != nil {
+		log.Fatalf("Task creation failed failed: %q\n", err.Error())
+	}
 
-			items, _, err := history.Items(thingscloud.ItemsOptions{StartIndex: 0})
-			if err != nil {
-				log.Fatalf("Failed to lookup items: %q\n", err.Error())
-			}
-			if err := state.Update(items...); err != nil {
-				log.Fatalf("Failed to update state: %q\n", err.Error())
-			}
+	log.Printf("Deleting task %s\n", taskUUID)
+	if err := history.Write(thingscloud.TaskActionItem{
+		Item: thingscloud.Item{
+			Kind:   thingscloud.ItemKindTask,
+			Action: thingscloud.ItemActionDeleted,
+			UUID:   taskUUID,
+		},
+		P: thingscloud.TaskActionItemPayload{},
+	}); err != nil {
+		log.Fatalf("Task deletion failed failed: %q\n", err.Error())
+	}
 
-			doneTasks := 0
-			for _, task := range state.Tasks {
-				if task.Status == thingscloud.TaskStatusCompleted {
-					doneTasks = doneTasks + 1
-				}
-			}
+	items, _, err := history.Items(thingscloud.ItemsOptions{StartIndex: 0})
+	if err != nil {
+		log.Fatalf("Failed to lookup items: %q\n", err.Error())
+	}
+	if err := state.Update(items...); err != nil {
+		log.Fatalf("Failed to update state: %q\n", err.Error())
+	}
 
-			doneChecklistItems := 0
-			for _, item := range state.CheckListItems {
-				if item.Status == thingscloud.TaskStatusCompleted {
-					doneChecklistItems = doneChecklistItems + 1
-				}
-			}
-			fmt.Printf(`Summary:
+	doneTasks := 0
+	for _, task := range state.Tasks {
+		if task.Status == thingscloud.TaskStatusCompleted {
+			doneTasks = doneTasks + 1
+		}
+	}
+
+	doneChecklistItems := 0
+	for _, item := range state.CheckListItems {
+		if item.Status == thingscloud.TaskStatusCompleted {
+			doneChecklistItems = doneChecklistItems + 1
+		}
+	}
+	fmt.Printf(`Summary:
 Areas:          %d
 Tasks:          %d (%d)
 CheckListItems: %d (%d)
 Tags:           %d
 `, len(state.Areas),
-				len(state.Tasks), doneTasks,
-				len(state.CheckListItems), doneChecklistItems,
-				len(state.Tags))
+		len(state.Tasks), doneTasks,
+		len(state.CheckListItems), doneChecklistItems,
+		len(state.Tags))
 
-			fmt.Printf("Tags\n")
-			for _, tag := range state.Tags {
-				if len(tag.ParentTagIDs) != 0 {
-					continue
-				}
-				printTag(tag, state, "")
-			}
-			fmt.Printf("\n\n")
-
-			fmt.Printf("Areas\n")
-			for _, area := range state.Areas {
-				fmt.Printf("-\t%s\n", area.Title)
-
-				for _, task := range state.TasksByArea(area, memory.ListOption{}) {
-					printTask(task, state, "|")
-				}
-			}
-
-			fmt.Printf("No Areas\n")
-			for _, task := range state.TasksWithoutArea() {
-				printTask(task, state, "|")
-			}
-
-			fmt.Printf("Today\n")
-			for _, task := range state.Tasks {
-				if task.Schedule != thingscloud.TaskScheduleToday {
-					continue
-				}
-				if task.Status != thingscloud.TaskStatusPending {
-					continue
-				}
-				printTask(task, state, "--")
-			}
+	fmt.Printf("Tags\n")
+	for _, tag := range state.Tags {
+		if len(tag.ParentTagIDs) != 0 {
+			continue
 		}
+		printTag(tag, state, "")
+	}
+	fmt.Printf("\n\n")
+
+	fmt.Printf("Areas\n")
+	for _, area := range state.Areas {
+		fmt.Printf("-\t%s\n", area.Title)
+
+		for _, task := range state.TasksByArea(area, memory.ListOption{}) {
+			printTask(task, state, "|")
+		}
+	}
+
+	fmt.Printf("No Areas\n")
+	for _, task := range state.TasksWithoutArea() {
+		printTask(task, state, "|")
+	}
+
+	fmt.Printf("Today\n")
+	for _, task := range state.Tasks {
+		if task.Schedule != thingscloud.TaskScheduleToday {
+			continue
+		}
+		if task.Status != thingscloud.TaskStatusPending {
+			continue
+		}
+		printTask(task, state, "--")
 	}
 }

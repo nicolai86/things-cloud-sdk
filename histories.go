@@ -89,6 +89,43 @@ func (c *Client) History(id string) (*History, error) {
 	}, nil
 }
 
+type v1historyResponse struct {
+	Key                 string `json:"history-key"`
+	LatestServerIndex   int    `json:"latest-server-index"`
+	IsEmpty             bool   `json:"is-empty"`
+	LatestSchemaVersion int    `json:"latest-schema-version"`
+}
+
+// OwnHistory returns the clients own history
+func (c *Client) OwnHistory() (*History, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("/account/%s/own-history-key", c.EMail), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusUnauthorized {
+			return nil, ErrUnauthorized
+		}
+		return nil, fmt.Errorf("http response code: %s", resp.Status)
+	}
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var data v1historyResponse
+	json.Unmarshal(bs, &data)
+
+	return &History{
+		Client: c,
+		ID:     data.Key,
+	}, nil
+}
+
 // Histories requests all known history keys
 func (c *Client) Histories() ([]*History, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/account/%s/own-history-keys", c.EMail), nil)

@@ -19,6 +19,8 @@ const (
 type VerifyResponse struct {
 	SLAVersionAccepted string          `json:"SLA-version-accepted"`
 	Issues             json.RawMessage `json:"issues"`
+	Email              string          `json:"email"`
+	MaildropEmail      string          `json:"maildrop-email"`
 	Status             AccountStatus   `json:"status"`
 }
 

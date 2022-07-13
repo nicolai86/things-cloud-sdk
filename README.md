@@ -5,7 +5,7 @@ be used to synchronize data between devices.
 This is a golang SDK to interact with that API, opening the API so that you
 can enhance your Things experience on iOS and Mac.
 
-[![wercker status](https://app.wercker.com/status/ddec74f2f7406079026aa44e8a004a86/s/master "wercker status")](https://app.wercker.com/project/byKey/ddec74f2f7406079026aa44e8a004a86)
+[![Go](https://github.com/nicolai86/things-cloud-sdk/actions/workflows/go.yml/badge.svg)](https://github.com/nicolai86/things-cloud-sdk/actions/workflows/go.yml)
 
 ## TODO
 

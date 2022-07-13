@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/httputil"
+	"strconv"
 )
 
 // History represents a synchronization stream. It's identified with a uuid v4
@@ -28,10 +31,13 @@ type historyResponse struct {
 
 // Sync ensures the history object is able to write to things
 func (h *History) Sync() error {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s", h.ID), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("/version/1/history/%s/items", h.ID), nil)
 	if err != nil {
 		return err
 	}
+	query := req.URL.Query()
+	query.Add("start-index", strconv.Itoa(h.LatestServerIndex))
+	req.URL.RawQuery = query.Encode()
 	resp, err := h.Client.do(req)
 	if err != nil {
 		return err
@@ -56,7 +62,7 @@ func (h *History) Sync() error {
 
 // History requests a specific history
 func (c *Client) History(id string) (*History, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/history/%s", id), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("/version/1/history/%s", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -98,37 +104,20 @@ type v1historyResponse struct {
 
 // OwnHistory returns the clients own history
 func (c *Client) OwnHistory() (*History, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/account/%s/own-history-key", c.EMail), nil)
+	resp, err := c.Verify()
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		if resp.StatusCode == http.StatusUnauthorized {
-			return nil, ErrUnauthorized
-		}
-		return nil, fmt.Errorf("http response code: %s", resp.Status)
-	}
-	bs, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var data v1historyResponse
-	json.Unmarshal(bs, &data)
 
 	return &History{
 		Client: c,
-		ID:     data.Key,
+		ID:     resp.HistoryKey,
 	}, nil
 }
 
 // Histories requests all known history keys
 func (c *Client) Histories() ([]*History, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/account/%s/own-history-keys", c.EMail), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("/version/1/account/%s/own-history-keys", c.EMail), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +155,7 @@ type createHistoryResponse struct {
 
 // CreateHistory requests a new history key
 func (c *Client) CreateHistory() (*History, error) {
-	req, err := http.NewRequest("POST", fmt.Sprintf("/account/%s/own-history-keys", c.EMail), nil)
+	req, err := http.NewRequest("POST", fmt.Sprintf("/version/1/account/%s/own-history-keys", c.EMail), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +186,7 @@ func (c *Client) CreateHistory() (*History, error) {
 // Delete destroys a history
 // Note that thingscloud will always return 202, even if the key is unknown
 func (h *History) Delete() error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("/account/%s/own-history-keys/%s", h.Client.EMail, h.ID), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/version/1/account/%s/own-history-keys/%s", h.Client.EMail, h.ID), nil)
 	if err != nil {
 		return err
 	}
@@ -212,17 +201,8 @@ func (h *History) Delete() error {
 	return nil
 }
 
-type writeRequest struct {
-	AppID            string                   `json:"app-id"`
-	AppInstanceID    string                   `json:"app-instance-id"`
-	CurrentItemIndex int                      `json:"current-item-index"`
-	Items            []map[string]interface{} `json:"items"`
-	PushPriority     int                      `json:"push-priority"`
-	Schema           int                      `json:"schema"`
-}
-
-type writeResponse struct {
-	CurrentItemIndex int `json:"current-item-index"`
+type commitResponse struct {
+	ServerHeadIndex int `json:"server-head-index"`
 }
 
 // Identifiable abstracts different thingscloud write requests. As we need to provide a map
@@ -232,24 +212,26 @@ type Identifiable interface {
 }
 
 func (h *History) Write(items ...Identifiable) error {
-	var v = writeRequest{
-		AppID:            "com.culturedcode.ThingsMac",
-		AppInstanceID:    "-com.culturedcode.ThingsMac",
-		CurrentItemIndex: h.LatestServerIndex,
-		PushPriority:     10,
-		Schema:           h.LatestSchemaVersion,
-		Items:            []map[string]interface{}{},
-	}
+	m := map[string]interface{}{}
 	for _, item := range items {
-		m := map[string]interface{}{}
 		m[item.UUID()] = item
-		v.Items = append(v.Items, m)
 	}
-	bs, err := json.Marshal(v)
+	bs, err := json.Marshal(m)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("/history/%s/items", h.ID), bytes.NewReader(bs))
+	req, err := http.NewRequest("POST", fmt.Sprintf("/version/1/history/%s/commit", h.ID), bytes.NewReader(bs))
+	req.Header.Add("Schema", "301")
+	req.Header.Add("Push-Priority", "5")
+	req.Header.Add("App-Instance-Id", "-com.culturedcode.ThingsMac")
+	req.Header.Add("App-Id", "com.culturedcode.ThingsMac")
+	req.Header.Add("Content-Encoding", "UTF-8")
+	req.Header.Add("Host", "cloud.culturedcode.com")
+	req.Header.Add("Accept", "application/json")
+	query := req.URL.Query()
+	query.Add("ancestor-index", strconv.Itoa(h.LatestServerIndex))
+	query.Add("_cnt", "1")
+	req.URL.RawQuery = query.Encode()
 	if err != nil {
 		return err
 	}
@@ -259,14 +241,16 @@ func (h *History) Write(items ...Identifiable) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		bs, _ := httputil.DumpResponse(resp, true)
+		log.Println(string(bs))
 		return fmt.Errorf("Write failed: %d", resp.StatusCode)
 	}
 	rs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	var w writeResponse
+	var w commitResponse
 	json.Unmarshal(rs, &w)
-	h.LatestServerIndex = w.CurrentItemIndex
+	h.LatestServerIndex = w.ServerHeadIndex
 	return nil
 }

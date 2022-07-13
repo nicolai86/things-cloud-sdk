@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	thingscloud "github.com/nicolai86/things-cloud-sdk"
@@ -47,6 +48,11 @@ func main() {
 	c := thingscloud.New(thingscloud.APIEndpoint, os.Getenv("THINGS_USERNAME"), os.Getenv("THINGS_PASSWORD"))
 
 	if os.Getenv("THINGS_CONFIRMATION_CODE") != "" {
+		log.Println("Accepting SLA")
+		if err := c.Accounts.AcceptSLA(); err != nil {
+			log.Fatalf("SLA acceptance failed: %v", err.Error())
+		}
+		log.Println("Confirming account")
 		if err := c.Accounts.Confirm(os.Getenv("THINGS_CONFIRMATION_CODE")); err != nil {
 			log.Fatalf("Confirmation failed: %v", err.Error())
 		}
@@ -79,16 +85,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to lookup own history key: %q\n", err.Error())
 	}
-	fmt.Printf("Own History Key: %s\n", history.ID)
+	fmt.Printf("Own History Key: %#v\n", history)
 
-	history.Sync()
+	if err := history.Sync(); err != nil {
+		log.Fatalf("unable to sync history: %v", err)
+	}
 
 	state := memory.NewState()
 
 	pending := thingscloud.TaskStatusPending
 	anytime := thingscloud.TaskScheduleAnytime
-	yes := thingscloud.Boolean(true)
+	no := thingscloud.Boolean(false)
 	taskUUID := uuid.New().String()
+	now := thingscloud.Timestamp(time.Now())
 	log.Printf("Creating task %s\n", taskUUID)
 	if err := history.Write(thingscloud.TaskActionItem{
 		Item: thingscloud.Item{
@@ -100,8 +109,8 @@ func main() {
 			Title:        stringVal("test project"),
 			Schedule:     &anytime,
 			Status:       &pending,
-			CreationDate: &thingscloud.Timestamp{},
-			IsProject:    &yes,
+			CreationDate: &now,
+			IsProject:    &no,
 		},
 	}); err != nil {
 		log.Fatalf("Task creation failed failed: %q\n", err.Error())

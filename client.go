@@ -9,7 +9,7 @@ import (
 
 const (
 	// APIEndpoint is the public culturedcode https endpoint
-	APIEndpoint = "https://cloud.culturedcode.com/version/1"
+	APIEndpoint = "https://cloud.culturedcode.com"
 )
 
 var (
@@ -49,23 +49,33 @@ func New(endpoint, email, password string) *Client {
 }
 
 // ThingsUserAgent is the http user-agent header set by things for mac Version 3.13.8 (31308504)
-const ThingsUserAgent = "ThingsMac/31308504mas"
+const ThingsUserAgent = "ThingsMac/31516502"
 
 func (c *Client) do(req *http.Request) (*http.Response, error) {
-	uri := fmt.Sprintf("%s%s", c.Endpoint, req.URL)
-	u, err := url.Parse(uri)
-	if err != nil {
-		return nil, err
+	if req.Host == "" {
+		uri := fmt.Sprintf("%s%s", c.Endpoint, req.URL)
+		u, err := url.Parse(uri)
+		if err != nil {
+			return nil, err
+		}
+		req.URL = u
 	}
-	req.URL = u
 
 	req.Header.Set("Host", "cloud.culturedcode.com")
-	req.Header.Set("Authorization", fmt.Sprintf("Password %s", c.password))
 	req.Header.Set("User-Agent", ThingsUserAgent)
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Encoding", "UTF8")
 	req.Header.Set("Accept-Language", "en-us")
 
-	return c.client.Do(req)
+	// bs, _ := httputil.DumpRequest(req, true)
+	// log.Println(string(bs))
+
+	resp, err := c.client.Do(req)
+	// if err == nil {
+	// 	bs, _ := httputil.DumpResponse(resp, true)
+	// 	log.Println(string(bs))
+	// }
+	// log.Println()
+	return resp, err
 }

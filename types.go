@@ -50,7 +50,7 @@ var (
 	// ItemKindChecklistItem identifies a CheckList
 	ItemKindChecklistItem ItemKind = "ChecklistItem"
 	// ItemKindTask identifies a Task or Subtask
-	ItemKindTask ItemKind = "Task3"
+	ItemKindTask ItemKind = "Task6"
 	// ItemKindArea identifies an Area
 	ItemKindArea ItemKind = "Area2"
 	// ItemKindSettings  identifies a setting

@@ -22,11 +22,13 @@ type VerifyResponse struct {
 	Email              string          `json:"email"`
 	MaildropEmail      string          `json:"maildrop-email"`
 	Status             AccountStatus   `json:"status"`
+	HistoryKey string `json:"history-key"`
 }
 
 // Verify checks that the provided API credentials are valid.
 func (c *Client) Verify() (*VerifyResponse, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/account/%s", c.EMail), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("/version/1/account/%s", c.EMail), nil)
+	req.Header.Set("Authorization", fmt.Sprintf("Password %s", c.password))
 	if err != nil {
 		return nil, err
 	}

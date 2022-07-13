@@ -18,10 +18,11 @@ type AccountService service
 
 // Delete deletes your current thingscloud account. This cannot be reversed
 func (s *AccountService) Delete() error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("/account/%s", s.client.EMail), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/version/1/account/%s", s.client.EMail), nil)
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Authorization", fmt.Sprintf("Password %s", s.client.password))
 	resp, err := s.client.do(req)
 	if err != nil {
 		return err
@@ -29,6 +30,33 @@ func (s *AccountService) Delete() error {
 	resp.Body.Close()
 
 	if resp.StatusCode != http.StatusAccepted {
+		if resp.StatusCode == http.StatusUnauthorized {
+			return ErrUnauthorized
+		}
+		return fmt.Errorf("http response code: %s", resp.Status)
+	}
+	return nil
+}
+
+func (s *AccountService) AcceptSLA() error {
+	data, err := json.Marshal(accountRequestBody{
+		SLAVersionAccepted: "https://cloud.culturedcode.com/sla/v1.5-rich.html?language=en",
+	})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("PUT", fmt.Sprintf("/version/1/account/%s", s.client.EMail), bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", fmt.Sprintf("Password %s", s.client.password))
+	resp, err := s.client.do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusUnauthorized {
 			return ErrUnauthorized
 		}
@@ -45,10 +73,11 @@ func (s *AccountService) Confirm(code string) error {
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", s.client.EMail), bytes.NewBuffer(data))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("/version/1/account/%s", s.client.EMail), bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Authorization", fmt.Sprintf("Password %s", s.client.password))
 	resp, err := s.client.do(req)
 	if err != nil {
 		return err
@@ -68,12 +97,11 @@ func (s *AccountService) Confirm(code string) error {
 func (s *AccountService) SignUp(email, password string) (*Client, error) {
 	data, err := json.Marshal(accountRequestBody{
 		Password:           password,
-		SLAVersionAccepted: "https://thingscloud.appspot.com/sla/v5.html",
 	})
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", email), bytes.NewBuffer(data))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("/version/1/account/%s", email), bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +128,7 @@ func (s *AccountService) ChangePassword(newPassword string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("/account/%s", s.client.EMail), bytes.NewBuffer(data))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("/version/1/account/%s", s.client.EMail), bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}

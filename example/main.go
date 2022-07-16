@@ -98,6 +98,9 @@ func main() {
 	no := thingscloud.Boolean(false)
 	taskUUID := uuid.New().String()
 	now := thingscloud.Timestamp(time.Now())
+	date := thingscloud.Timestamp(time.Now().Truncate(24 * time.Hour))
+	todayIdx := 0
+	idx := -4000
 	log.Printf("Creating task %s\n", taskUUID)
 	if err := history.Write(thingscloud.TaskActionItem{
 		Item: thingscloud.Item{
@@ -106,11 +109,16 @@ func main() {
 			UUID:   taskUUID,
 		},
 		P: thingscloud.TaskActionItemPayload{
-			Title:        stringVal("test project"),
-			Schedule:     &anytime,
-			Status:       &pending,
-			CreationDate: &now,
-			IsProject:    &no,
+			Title:            stringVal("test project"),
+			Schedule:         &anytime,
+			Status:           &pending,
+			CreationDate:     &now,
+			ModificationDate: &now,
+			ScheduledDate:    &date,
+			TaskIR:           &date,
+			Index:            &idx,
+			TaskIndex:        &todayIdx,
+			IsProject:        &no,
 		},
 	}); err != nil {
 		log.Fatalf("Task creation failed failed: %q\n", err.Error())

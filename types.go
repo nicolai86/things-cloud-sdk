@@ -175,7 +175,8 @@ type TaskActionItemPayload struct {
 	ModificationDate  *Timestamp             `json:"md,omitempty"` // ok
 	ScheduledDate     *Timestamp             `json:"sr,omitempty"`
 	CompletionDate    *Timestamp             `json:"sp,omitempty"`
-	DeadlineDate      *Timestamp             `json:"dd,omitempty"` //
+	DeadlineDate      *Timestamp             `json:"dd,omitempty"`  //
+	TaskIR            *Timestamp             `json:"tir,omitempty"` // hm, not sure what tir stands for
 	Status            *TaskStatus            `json:"ss,omitempty"`
 	IsProject         *Boolean               `json:"tp,omitempty"`
 	Title             *string                `json:"tt,omitempty"`
@@ -184,6 +185,7 @@ type TaskActionItemPayload struct {
 	ParentTaskIDs     *[]string              `json:"pr,omitempty"`
 	TagIDs            []string               `json:"tg,omitempty"`
 	InTrash           *bool                  `json:"tr,omitempty"`
+	TaskIndex         *int                   `json:"ti,omitempty"`
 	RecurrenceTaskIDs *[]string              `json:"rt,omitempty"`
 	Schedule          *TaskSchedule          `json:"st,omitempty"`
 	ActionGroupIDs    *[]string              `json:"agr,omitempty"`

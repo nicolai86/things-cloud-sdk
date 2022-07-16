@@ -52,10 +52,10 @@ func (h *History) Sync() error {
 	if err != nil {
 		return err
 	}
-	var v historyResponse
+	var v itemsResponse
 	json.Unmarshal(bs, &v)
-	h.LatestServerIndex = v.LatestServerIndex
-	h.LatestSchemaVersion = v.LatestSchemaVersion
+	h.LatestServerIndex = v.CurrentItemIndex
+	h.LatestSchemaVersion = v.SchemaVersion
 	h.LatestTotalContentSize = v.LatestTotalContentSize
 	return nil
 }
